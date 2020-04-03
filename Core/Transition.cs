@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 
 namespace ServicesPetriNet.Core {
-    public class Transition : Node
+    public struct Transition : INode
     {
-        public List<Extensions.Link> Links;
+        public List<Link> Links;
         public Type Action;
+
     }
 }

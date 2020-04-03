@@ -8,53 +8,58 @@ namespace ServicesPetriNet
 {
     public static class Extensions
     {
+        #region GDI
+
         public static Dictionary<string, Place> GetAllPlaces<T>(T instance)
         {
-            return GetAllTypesBasedOn<T, Place>(instance);
+            return GetAllTypesBasedOn<T, Place, Group>(instance);
         }
 
         public static Dictionary<string, Transition> GetAllTransitions<T>(T instance)
         {
-            return GetAllTypesBasedOn<T, Transition>(instance);
+            return GetAllTypesBasedOn<T, Transition, Group>(instance);
         }
-        public static List<Type> GetAllMarkTypes<T>() { return GetAllInterfaceBasedTypes<T>(typeof(IMarkType)); }
-
-        //Todo fill
-        public static Dictionary<Enum, Node> NodesCatch;
-
-        public class Link
+        public static List<Type> GetAllMarkTypes<T>() { return GetAllInterfaceBasedTypes<IMarkType, T, Group>(); }
+        
+        public static Dictionary<string, Tbase> GetAllTypesBasedOn<Thost, Tbase, Tbottom>(Thost instance)
         {
-            public Node From;
-            public Node To;
-            public Type What { get; }
+            var t = typeof(Tbase);
+            var allIntegerFields = new Dictionary<string, Tbase>();
 
-            public Count CountStrategy { get; }
-            public int CountStrategyAmmount { get; }
+            do {
+                foreach (var Fi in typeof(Thost)
+                    .GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                    .Where(fi => fi.FieldType.IsAssignableFrom(t) && fi.DeclaringType != typeof(Tbottom)).ToList()) {
+                    allIntegerFields.Add(Fi.Name, (Tbase) Fi.GetValue(instance));
+                }
+            } while ((t = t.BaseType) != null || t != typeof(Tbottom));
 
-            public enum Count { One, All, Some }
-
-            public Link(Node @from, Node to, Type what, Count howMany, int count = -1)
-            {
-                From = @from;
-                To = to;
-                What = what;
-                CountStrategy = howMany;
-                CountStrategyAmmount = count;
-            }
+            return allIntegerFields;
         }
-        public class Link<T> : Link
+
+        public static List<Type> GetAllInterfaceBasedTypes<Tinterface, Tbase, Tbottom>()
         {
-            public Link(Node @from, Node to, Count howMany = Count.One, int count = -1) : base(
-                @from,
-                to,
-                typeof(T),
-                howMany,
-                count
-            ) { }
+            var t = typeof(Tbase);
+
+            HashSet<Type> allIntegerFields = new HashSet<Type>();
+            do {
+                foreach (var Ti in t.GetNestedTypes(BindingFlags.DeclaredOnly | BindingFlags.Public)
+                    .Where(ti => ti.GetInterfaces().Contains(typeof(Tinterface))).ToList()) {
+                    allIntegerFields.Add(Ti);
+                }
+            } while ((t = t.BaseType) != null ||
+                     t != typeof(Tbottom));
+
+            return allIntegerFields.ToList();
         }
+        #endregion GDI
+
+
+        #region Transition
 
         public static Transition Action<T>(this Transition t)
         {
+            t.Links = new List<Link>();
             t.Action = typeof(T);
             return t;
         }
@@ -62,7 +67,7 @@ namespace ServicesPetriNet
         public static Transition In<T>(this Transition t, Place @from, Link.Count howMany = Link.Count.One,
             int count = -1)
         {
-            t.Links.Add(new Link<T>((Node) @from, t, howMany, count));
+            t.Links.Add(new Link<T>((INode) @from, t, howMany, count));
             return t;
         }
 
@@ -72,34 +77,9 @@ namespace ServicesPetriNet
             t.Links.Add(new Link<T>(t, to, howMany, count));
             return t;
         }
+        #endregion Transition
 
-
-        public static Dictionary<string, Tbase> GetAllTypesBasedOn<Thost, Tbase>(Thost instance)
-        {
-            var t = typeof(Tbase);
-            var allIntegerFields = new Dictionary<string, Tbase>();
-
-            foreach (var Fi in typeof(Thost)
-                .GetFields(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-                .Where(fi => fi.FieldType.IsAssignableFrom(t)).ToList()) {
-                allIntegerFields.Add(Fi.Name, (Tbase) Fi.GetValue(instance));
-            }
-
-            return allIntegerFields;
-        }
-
-        public static List<Type> GetAllInterfaceBasedTypes<T>(Type t)
-        {
-            List<Type> allIntegerFields = new List<Type>();
-
-            foreach (var Ti in typeof(T).GetNestedTypes(BindingFlags.DeclaredOnly | BindingFlags.Public)
-                .Where(ti => ti.GetInterfaces().Contains(t)).ToList()) {
-                allIntegerFields.Add(Ti);
-            }
-
-            return allIntegerFields;
-        }
-
+        #region Marks
         public static List<MarkType> At(Place place, MarkType addMark)
         {
             return new List<MarkType> {
@@ -112,5 +92,7 @@ namespace ServicesPetriNet
             arr.Add(addMark);
             return arr;
         }
+        #endregion Marks
+
     }
 }

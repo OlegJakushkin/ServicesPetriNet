@@ -1,3 +1,3 @@
 ﻿namespace ServicesPetriNet.Core {
-    public class Node { }
+    public interface INode { }
 }

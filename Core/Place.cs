@@ -1,3 +1,3 @@
 ﻿namespace ServicesPetriNet.Core {
-    public class Place : Node { }
+    public struct Place : INode { }
 }

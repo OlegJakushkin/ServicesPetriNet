@@ -4,6 +4,7 @@ using JetBrains.Annotations;
 using ServicesPetriNet.Core;
 using ServicesPetriNet.Core.Attributes;
 using ServicesPetriNet.Core.Transitions;
+using ServicesPetriNet.Examples;
 using static ServicesPetriNet.Extensions;
 
 namespace ServicesPetriNet
@@ -59,6 +60,21 @@ namespace ServicesPetriNet
 
     class Program
     {
-        static void Main(string[] args) { }
+        static void Main(string[] args)
+        {
+            var Simulation = new SimpleTwoHostNetwork();
+            Draw(Simulation);
+            Run(Simulation, 100);
+        }
+
+        private static void Draw(SimpleTwoHostNetwork simulation)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        private static void Run(SimpleTwoHostNetwork simulation, int steps)
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }
