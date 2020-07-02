@@ -6,6 +6,5 @@ namespace ServicesPetriNet.Core {
     {
         public List<Link> Links;
         public Type Action;
-
     }
 }

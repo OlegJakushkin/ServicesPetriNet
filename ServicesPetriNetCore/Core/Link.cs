@@ -11,7 +11,7 @@ namespace ServicesPetriNet {
         public Count CountStrategy { get; }
         public int CountStrategyAmmount { get; }
 
-        public enum Count { One, All, Some }
+        public enum Count { One, All, Some, None }
 
         public Link(INode @from, INode to, Type what, Count howMany, int count = -1)
         {

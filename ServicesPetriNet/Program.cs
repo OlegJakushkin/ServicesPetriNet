@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 using ServicesPetriNet.Core;
@@ -36,7 +37,7 @@ namespace ServicesPetriNet
 
                 var out = in.GroupBy(p=>p.From)
                 .ToDictionary(g => g.Key, g.ToList())
-                .Where(g => g.Key.Count > p.Value.Count)
+                .Where(g => g.Key.Count > p.Value.Count)кцу4
                 .Select(p => {
                     var totall = p.Key.Count
                     var seq = Enumerable.Range(0, totall).ToList();
@@ -56,25 +57,44 @@ namespace ServicesPetriNet
 
     // todo simple net
     // todo simple router https://www.youtube.com/watch?v=rYodcvhh7b8
-    
+    // 
 
     class Program
     {
         static void Main(string[] args)
         {
             var Simulation = new SimpleTwoHostNetwork();
-            Draw(Simulation);
+            //Draw(Simulation);
             Run(Simulation, 100);
+            Console.ReadLine();
         }
 
-        private static void Draw(SimpleTwoHostNetwork simulation)
+        public class Graph
         {
-            throw new System.NotImplementedException();
+            public Dictionary<string, INode> Nodes = new Dictionary<string, INode>();
+            public List<Link> Edges = new List<Link>();
+
         }
 
-        private static void Run(SimpleTwoHostNetwork simulation, int steps)
+        private static void Draw<T>(T simulation)
+        where T : Group
         {
-            throw new System.NotImplementedException();
+            var groups = GetAllTypeInstancesBasedOn<T, Group>(simulation);
+            groups.Add(nameof(simulation), simulation);
+            foreach (var @group in groups) {
+
+            }
+        }
+
+        private static void Run<T>(T simulation, int steps)
+            where T : Group
+        {
+            var groups = GetAllGroups(simulation);
+            groups.Add(nameof(simulation), simulation);
+            foreach (var @group in groups)
+            {
+                Console.WriteLine(@group.Key);
+            }
         }
     }
 }

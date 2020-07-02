@@ -12,29 +12,52 @@ namespace ServicesPetriNet
 
         public static Dictionary<string, Place> GetAllPlaces<T>(T instance)
         {
-            return GetAllTypesBasedOn<T, Place, Group>(instance);
+            return GetAllTypeInstancesBasedOn<T, Place>(instance);
+        }
+
+        public static Dictionary<string, Group> GetAllGroups<T>(T instance)
+        {
+            return GetAllTypeInstancesBasedOn<T, Group>(instance);
         }
 
         public static Dictionary<string, Transition> GetAllTransitions<T>(T instance)
         {
-            return GetAllTypesBasedOn<T, Transition, Group>(instance);
+            return GetAllTypeInstancesBasedOn<T, Transition>(instance);
         }
         public static List<Type> GetAllMarkTypes<T>() { return GetAllInterfaceBasedTypes<IMarkType, T, Group>(); }
         
-        public static Dictionary<string, Tbase> GetAllTypesBasedOn<Thost, Tbase, Tbottom>(Thost instance)
+        public static Dictionary<string, Tbase> GetAllTypeInstancesBasedOn<Thost, Tbase>(Thost instance)
         {
             var t = typeof(Tbase);
-            var allIntegerFields = new Dictionary<string, Tbase>();
+            var allFields = new Dictionary<string, Tbase>();
+         
+            foreach (var Fi in typeof(Thost)
+                .GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                .Where(fi => t.IsAssignableFrom(fi.FieldType)).ToList()) {
+                allFields.Add(Fi.Name, (Tbase) Fi.GetValue(instance));
+            }
+          
+            return allFields;
+        }
 
-            do {
-                foreach (var Fi in typeof(Thost)
-                    .GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-                    .Where(fi => fi.FieldType.IsAssignableFrom(t) && fi.DeclaringType != typeof(Tbottom)).ToList()) {
-                    allIntegerFields.Add(Fi.Name, (Tbase) Fi.GetValue(instance));
+        public static void InitAllGroupTypeInstances<Thost>(Thost instance)
+        {
+            if (instance == null)
+                return;
+
+            var t = typeof(Group);
+            foreach (var Fi in typeof(Thost)
+                .GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                .Where(fi => t.IsAssignableFrom(fi.FieldType) ).ToList()) {
+                var n = Fi.Name;
+                if (Fi.FieldType != typeof(Type)) {
+                    var it = (Group) Fi.GetValue(instance);
+                    if (it == null) {
+                        var Tgroup = typeof(Group<>);
+                        Fi.SetValue(instance, (Group) Activator.CreateInstance(Fi.FieldType));
+                    }
                 }
-            } while ((t = t.BaseType) != null || t != typeof(Tbottom));
-
-            return allIntegerFields;
+            }
         }
 
         public static List<Type> GetAllInterfaceBasedTypes<Tinterface, Tbase, Tbottom>()
@@ -47,13 +70,11 @@ namespace ServicesPetriNet
                     .Where(ti => ti.GetInterfaces().Contains(typeof(Tinterface))).ToList()) {
                     allIntegerFields.Add(Ti);
                 }
-            } while ((t = t.BaseType) != null ||
-                     t != typeof(Tbottom));
+            } while (t != typeof(Tbottom) && (t = t.BaseType) != null);
 
             return allIntegerFields.ToList();
         }
         #endregion GDI
-
 
         #region Transition
 

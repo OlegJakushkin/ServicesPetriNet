@@ -7,7 +7,7 @@ using static ServicesPetriNet.Extensions;
 
 namespace ServicesPetriNet.Examples
 {
-    public class SimpleTwoHostNetwork : Group
+    public class SimpleTwoHostNetwork : Group<SimpleTwoHostNetwork>
     {
         public Place ServiceA, ServiceB;
 
@@ -15,7 +15,7 @@ namespace ServicesPetriNet.Examples
 
         public SimpleNetwork FromA, FromB;
 
-        public SimpleTwoHostNetwork()
+        public SimpleTwoHostNetwork() : base()
         {
             DecomposeA.Action<Decompose>()
                 .In<Message>(ServiceA)
@@ -76,7 +76,7 @@ namespace ServicesPetriNet.Examples
         }
 
 
-        public class SimpleNetwork : Group
+        public class SimpleNetwork : Group<SimpleNetwork>
         {
             public Place NetworkFrom, NetworkTo;
             private Place Channel;
