@@ -9,54 +9,47 @@ namespace ServicesPetriNet
 {
     namespace Core
     {
+        public static class MarksController
+        {
+            public static List<MarkType> Marks = new List<MarkType>();
+
+            public static List<MarkType> GetPlaceMarks(Place p)
+            {
+                return Marks.Where(type => type != null && type.Host.Equals( p) ).ToList();
+            }
+
+            //ToDo: toexpansion
+        }
+
         public class MarkType : IMarkType
         {
-            public static MarkType Create<T>(params int[] fields)
+            public INode Host { get; set; }
+
+            public static MarkType Create<T>(params object[] fields)
             {
                 Type t = typeof(T);
-                var o = Dynamic.InvokeConstructor(t);
+                var o = Dynamic.InvokeConstructor(t); // Activator.CreateInstance(t);
+
                 int argId = 0;
                 foreach (var fieldInfo in t.GetFields(
                     BindingFlags.DeclaredOnly |
                     BindingFlags.Public |
                     BindingFlags.Instance
                 )) {
-                    if (fieldInfo.FieldType == typeof(int)) {
-                        if (argId < fields.Length) {
-                            Dynamic.InvokeSet(o, fieldInfo.Name, fields[argId++]);
-                        } else {
-                            break;
-                        }
+                    var isMark = fieldInfo.FieldType == typeof(MarkType);
+                    var isInt = fieldInfo.FieldType == typeof(int);;
+                    if (!( isMark || isInt)) {
+                        throw new Exception("Only nested mark types and int types are allowed");
+                    }
+                    if (argId < fields.Length) {
+                        Dynamic.InvokeSet(o, fieldInfo.Name, fields[argId++]);
                     } else {
-                        throw new
-                            Exception(
-                                "Mark Type Shall Contain only Int Fields! Only int fields are operated upon in CPNs"
-                            );
+                        break;
                     }
                 }
-
-                return (MarkType) o;
-            }
-
-            public Dictionary<string, int> GetData()
-            {
-                Dictionary<string, int> allIntegerFields = new Dictionary<string, int>();
-
-                // DeclaredOnly: only get fields declared by this type, not the ones declared by base classes
-                // Public | Instance: Only get non-static, public fields
-                foreach (FieldInfo fieldInfo in GetType()
-                    .GetFields(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance)) {
-                    if (fieldInfo.FieldType == typeof(int)) {
-                        allIntegerFields.Add(fieldInfo.Name, (int) fieldInfo.GetValue(this));
-                    } else {
-                        throw new
-                            Exception(
-                                "Mark Type Shall Contain only Int Fields! Only int fields are operated upon in CPNs"
-                            );
-                    }
-                }
-
-                return allIntegerFields;
+                var result = (MarkType)o;
+                MarksController.Marks.Add(result);
+                return result;
             }
 
             public MarkType(IMarkType parent = null)

@@ -2,6 +2,7 @@
 using ServicesPetriNet.Core;
 
 namespace ServicesPetriNet {
+    // A class for transition requirements regulation
     public class Link
     {
         public INode From;
@@ -20,6 +21,18 @@ namespace ServicesPetriNet {
             What = what;
             CountStrategy = howMany;
             CountStrategyAmmount = count;
+
+            if (howMany == Count.One)
+            {
+                CountStrategyAmmount = 1;
+            }
+            else if (howMany == Count.None)
+            {
+                CountStrategyAmmount = 0;
+            } else if (howMany == Count.Some && CountStrategyAmmount < 0) {
+                throw new Exception("If Count is set to Some, CountStrategyAmmount shall be > 0!");
+            }
+
         }
     }
 
@@ -32,6 +45,7 @@ namespace ServicesPetriNet {
             howMany,
             count
         )
-        { }
+        {
+        }
     }
 }
