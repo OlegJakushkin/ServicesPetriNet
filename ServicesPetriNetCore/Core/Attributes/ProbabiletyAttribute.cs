@@ -1,14 +1,34 @@
 ﻿using System;
+using System.Collections.Generic;
+using Accord.Statistics;
+using Accord.Statistics.Distributions;
+using Accord.Statistics.Distributions.Univariate;
 
 namespace ServicesPetriNet.Core.Attributes {
-    [AttributeUsage(AttributeTargets.Method)]
-    public class ProbabiletyAttribute : Attribute
+
+    public interface IProbabiletyAttribute
     {
-        public ProbabiletyAttribute(double Probabilety, Type Distribution)
+        IDistribution Distribution { get; }
+    }
+
+    //Used to query if enablable transition can fire
+    //https://github.com/accord-net/framework/wiki/Distributions
+    [AttributeUsage(AttributeTargets.Field)]
+    public class ProbabiletyAttribute : Attribute, IProbabiletyAttribute 
+    {
+        public IDistribution Distribution { get; }
+
+        public ProbabiletyAttribute(double Probabilety = 0.5)
         {
-            throw new NotImplementedException();
+            Distribution = new BinomialDistribution(
+                2, Probabilety);
         }
 
-        public ProbabiletyAttribute(double Probabilety) { throw new NotImplementedException(); }
+        public ProbabiletyAttribute(params int[] values)
+        {
+            Distribution = new BinomialDistribution();
+            Distribution.Fit(values);
+        }
+
     }
 }

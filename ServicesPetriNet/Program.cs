@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using JetBrains.Annotations;
 using ServicesPetriNet.Core;
-using ServicesPetriNet.Core.Attributes;
-using ServicesPetriNet.Core.Transitions;
 using ServicesPetriNet.Examples;
 using static ServicesPetriNet.Extensions;
 

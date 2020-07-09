@@ -27,7 +27,7 @@ namespace ServicesPetriNet
             return GetAllTypeInstancesBasedOn<T, Transition>(instance);
         }
 
-        public static List<Type> GetAllMarkTypes<T>() { return GetAllInterfaceBasedTypes<IMarkType, T, Group>(); }
+
 
         public static Dictionary<string, Tbase> GetAllTypeInstancesBasedOn<Thost, Tbase>(Thost instance)
         {
@@ -61,22 +61,6 @@ namespace ServicesPetriNet
                     }
                 }
             }
-        }
-
-        public static List<Type> GetAllInterfaceBasedTypes<Tinterface, Tbase, Tbottom>()
-        {
-            var t = typeof(Tbase);
-
-            HashSet<Type> allIntegerFields = new HashSet<Type>();
-            do {
-                foreach (var Ti in t.GetNestedTypes(BindingFlags.DeclaredOnly | BindingFlags.Public)
-                    .Where(ti => ti.GetInterfaces().Contains(typeof(Tinterface))).ToList()) {
-                    allIntegerFields.Add(Ti);
-                }
-            } while (t != typeof(Tbottom) &&
-                     (t = t.BaseType) != null);
-
-            return allIntegerFields.ToList();
         }
 
         #endregion GDI
