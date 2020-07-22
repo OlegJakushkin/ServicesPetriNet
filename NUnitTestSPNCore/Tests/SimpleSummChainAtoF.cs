@@ -1,11 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
 using ServicesPetriNet;
 using ServicesPetriNet.Core;
 
 namespace ServicesPetriNetCore.Core.Tests
 {
-    public class SimpleSummChainAtoF : Group<SimpleSummChainAtoF>
+    public class SimpleSummChainAtoF : Group
     {
         public Place A, B, C, D, E, F;
 
@@ -37,6 +38,7 @@ namespace ServicesPetriNetCore.Core.Tests
 
         public class Add
         {
+            [UsedImplicitly]
             public void Action(List<Mark> marks, out Mark result)
             {
                 result = new Mark() { value = marks.Aggregate(0, (i, mark) => i + mark.value) };

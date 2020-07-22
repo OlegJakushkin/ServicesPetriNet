@@ -3,7 +3,7 @@ using ServicesPetriNet.Core.Transitions;
 
 namespace ServicesPetriNet.Examples
 {
-    public class SimpleNetwork : Group<SimpleNetwork>
+    public class SimpleNetwork : Group
     {
         public Place NetworkFrom, NetworkTo;
         private Place Channel;
@@ -18,8 +18,6 @@ namespace ServicesPetriNet.Examples
             Receive.Action<OneToOne<Package>>()
                 .In<Package>(Channel)
                 .Out<Package>(NetworkTo);
-
-            GroupDescriptor = new GroupDescriptor<SimpleNetwork>(this);
         }
 
         public class Package : MarkType

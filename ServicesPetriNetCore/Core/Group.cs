@@ -6,23 +6,32 @@ using static ServicesPetriNet.Extensions;
 namespace ServicesPetriNet.Core {
     public class Group
     {
-        public IGroupDescriptor GroupDescriptor { get; set; }
+        public IGroupDescriptor Descriptor { get; set; }
         public Type Type;
 
         public List<MarkType> Marks
         {
-            get => GroupDescriptor.Marks;
-            set => GroupDescriptor.Refresh();
+            get => Descriptor.Marks;
+            set => Descriptor.Refresh();
         }
-    }
+        public List<Pattern> Patterns
+        {
+            get => Descriptor.Patterns;
+            set => Descriptor.Refresh();
+        }
 
-    public class Group<T> : Group where T : class
-    {
         public Group()
         {
-            Type = typeof(T);
-            InitAllGroupTypeInstances(this as T);
-            GroupDescriptor = new GroupDescriptor<T>(this as T);
+            Type = this.GetType();
+            InitAllTypeInstances<Place>(this);
+            InitAllTypeInstances<Transition>(this);
+            InitAllTypeInstances<Group>(this);
+
+            Descriptor = GroupDescriptor.CreateInstance(this);
         }
     }
+    //Group<T> is a basic unit of Places, Transitions and logic combination in SPN
+
+    //Pattern is for taking parts of a group and expanding it with pre-made mechanics
+    //If places or transitions need to be added they shall be created mnually
 }

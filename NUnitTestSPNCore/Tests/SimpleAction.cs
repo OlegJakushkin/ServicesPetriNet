@@ -1,28 +1,26 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System;
 using JetBrains.Annotations;
 using ServicesPetriNet;
 using ServicesPetriNet.Core;
+using ServicesPetriNet.Core.Attributes;
 
 namespace ServicesPetriNetCore.Core.Tests
 {
-    public class SimpleAplusBplusCtoDviaList : Group
+    public class SimpleAction : Group
     {
-        public Place A, B, C, D;
+        public Place A, B, C;
 
         private Transition Summ;
 
-        public SimpleAplusBplusCtoDviaList()
+        public SimpleAction()
         {
             Summ.Action<Add>()
                 .In<Mark>(A)
                 .In<Mark>(B)
-                .In<Mark>(C)
-                .Out<Mark>(D);
+                .Out<Mark>(C);
 
             Marks = Extensions.At(A, MarkType.Create<Mark>(5))
-                .At(B, MarkType.Create<Mark>(6))
-                .At(C, MarkType.Create<Mark>(7));
+                .At(B, MarkType.Create<Mark>(6));
         }
 
         public class Mark : MarkType
@@ -33,9 +31,9 @@ namespace ServicesPetriNetCore.Core.Tests
         public class Add
         {
             [UsedImplicitly]
-            public Mark Action(List<Mark> marks)
+            public static Mark Action(Mark fromA, Mark fromB)
             {
-                return new Mark() { value = marks.Aggregate(0, (i, mark) => i+mark.value) };
+                return  new Mark(){value = fromA.value+fromB.value};
             }
         }
     }

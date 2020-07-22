@@ -10,7 +10,7 @@ namespace ServicesPetriNet.Core
     // Action function a structure like this:
     // - public Tout Action(Tin ps)
     // - public void  Action(T1in ps, ..., TNin ps, out T1out,..., out TNout)
-    public struct Transition : INode
+    public class Transition : INode
     {
         public List<Link> Links;
         public Type Action;

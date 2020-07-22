@@ -31,4 +31,29 @@ namespace ServicesPetriNet.Core.Attributes {
         }
 
     }
+
+    [AttributeUsage(AttributeTargets.Field)]
+    public class PrioretyAttribute : Attribute
+    {
+        public int Priorety { get; }
+
+        public PrioretyAttribute(int Priorety = 999)
+        {
+            Priorety = Priorety;
+        }
+
+    }
+
+
+    [AttributeUsage(AttributeTargets.Field)]
+    public class TimeScaleAttribute : Attribute
+    {
+        public int Scale { get; }
+
+        public TimeScaleAttribute(int Scale = 1)
+        {
+            Scale = Scale;
+        }
+
+    }
 }

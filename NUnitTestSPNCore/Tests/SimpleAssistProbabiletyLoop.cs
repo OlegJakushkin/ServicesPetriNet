@@ -6,7 +6,7 @@ using static ServicesPetriNet.Extensions;
 
 namespace ServicesPetriNetCore.Core.Tests
 {
-    public class SimpleAssistLoop : Group<SimpleAtoB>
+    public class SimpleAssistProbabiletyLoop : Group
     {
         public Place A, B, C;
 
@@ -18,7 +18,7 @@ namespace ServicesPetriNetCore.Core.Tests
         [Probabilety(1,0,1,0,1,0)]
         public Transition CtoB;
 
-        public SimpleAssistLoop()
+        public SimpleAssistProbabiletyLoop()
         {
             AtoC.Action<OneToOne<Mark>>()
                 .In<Mark>(A)

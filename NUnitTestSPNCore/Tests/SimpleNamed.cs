@@ -1,20 +1,20 @@
-﻿using ServicesPetriNet;
+﻿using JetBrains.Annotations;
+using ServicesPetriNet;
 using ServicesPetriNet.Core;
-using ServicesPetriNet.Core.Attributes;
 
 namespace ServicesPetriNetCore.Core.Tests
 {
-    public class SimpleAplusBtoC : Group<SimpleAplusBtoC>
+    public class SimpleNamed : Group
     {
         public Place A, B, C;
 
         private Transition Summ;
 
-        public SimpleAplusBtoC()
+        public SimpleNamed()
         {
-            Summ.Action<Add>()
-                .In<Mark>(A)
-                .In<Mark>(B)
+            Summ.Action<BminusA>()
+                .In<Mark>(A, Link.Count.One, nameof(A))
+                .In<Mark>(B, Link.Count.One, nameof(B))
                 .Out<Mark>(C);
 
             Marks = Extensions.At(A, MarkType.Create<Mark>(5))
@@ -26,11 +26,12 @@ namespace ServicesPetriNetCore.Core.Tests
             public int value;
         }
 
-        public class Add
+        public class BminusA
         {
-            public Mark Action(Mark fromA, Mark fromB)
+            [UsedImplicitly]
+            public Mark Action(Mark B, Mark A)
             {
-                return  new Mark(){value = fromA.value+fromB.value};
+                return new Mark() { value = B.value - A.value };
             }
         }
     }

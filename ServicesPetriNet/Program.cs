@@ -72,16 +72,6 @@ namespace ServicesPetriNet
 
         }
 
-        private static void Draw<T>(T simulation)
-        where T : Group
-        {
-            var groups = GetAllTypeInstancesBasedOn<T, Group>(simulation);
-            groups.Add(nameof(simulation), simulation);
-            foreach (var @group in groups) {
-
-            }
-        }
-
         private static void Run<T>(T simulation, int steps)
             where T : Group
         {

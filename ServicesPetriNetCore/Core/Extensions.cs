@@ -1,66 +1,120 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Linq;
 using System.Reflection;
 using Dynamitey;
+using Dynamitey.DynamicObjects;
 using ServicesPetriNet.Core;
 
 namespace ServicesPetriNet
 {
     public static class Extensions
     {
+        public static IEnumerable<T> Traverse<T>(this IEnumerable<T> items,
+            Func<T, IEnumerable<T>> childSelector)
+        {
+            var stack = new Stack<T>(items);
+            while (stack.Any())
+            {
+                var next = stack.Pop();
+                yield return next;
+                foreach (var child in childSelector(next))
+                    stack.Push(child);
+            }
+        }
+
         #region GDI
 
-        public static Dictionary<string, Place> GetAllPlaces<T>(T instance)
+        public static Dictionary<string, FieldDescriptor<Place>> GetAllPlaces(Group instance)
         {
-            return GetAllTypeInstancesBasedOn<T, Place>(instance);
+            return GetAllTypeInstancesBasedOn<Place>(instance);
         }
 
-        public static Dictionary<string, Group> GetAllGroups<T>(T instance)
+        public static Dictionary<string, FieldDescriptor<Group>> GetAllGroups(Group instance)
         {
-            return GetAllTypeInstancesBasedOn<T, Group>(instance);
+            return GetAllTypeInstancesBasedOn<Group>(instance);
         }
 
-        public static Dictionary<string, Transition> GetAllTransitions<T>(T instance)
+        public static Dictionary<string, FieldDescriptor<Transition>> GetAllTransitions(Group instance)
         {
-            return GetAllTypeInstancesBasedOn<T, Transition>(instance);
+            return GetAllTypeInstancesBasedOn<Transition>(instance);
         }
 
-
-
-        public static Dictionary<string, Tbase> GetAllTypeInstancesBasedOn<Thost, Tbase>(Thost instance)
+        public static Dictionary<string, FieldDescriptor<Tbase>> GetAllTypeInstancesBasedOn<Tbase>(Group instance)
         {
             var t = typeof(Tbase);
-            var allFields = new Dictionary<string, Tbase>();
-
-            foreach (var Fi in typeof(Thost)
+            var allFields = new Dictionary<string, FieldDescriptor<Tbase>>();
+            var Thost = instance.GetType();
+            foreach (var Fi in Thost
                 .GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
                 .Where(fi => t.IsAssignableFrom(fi.FieldType)).ToList()) {
-                allFields.Add(Fi.Name, (Tbase) Fi.GetValue(instance));
+                allFields.Add(Fi.Name, new FieldDescriptor<Tbase>() {
+                Value = (Tbase) Fi.GetValue(instance),
+                Attributes = Fi.GetCustomAttributes(typeof(Attribute), true).Cast<Attribute>().ToList()
+                    });
+            }
+
+            t = typeof(List<Tbase>);
+
+            foreach (var Fi in Thost
+                .GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                .Where(fi => t.IsAssignableFrom(fi.FieldType)).ToList()) {
+                var l = (List<Tbase>) Fi.GetValue(instance);
+                var iterator = 0;
+                l.ForEach(i=> allFields.Add(Fi.Name + "_" + iterator++, new FieldDescriptor<Tbase>()
+                {
+                    Value = (Tbase)i,
+                    Attributes = Fi.GetCustomAttributes(typeof(Attribute), true).Cast<Attribute>().ToList()
+                })); 
+                
             }
 
             return allFields;
         }
 
-        public static void InitAllGroupTypeInstances<Thost>(Thost instance)
+        public static void InitAllTypeInstances<TChild>(object instance)
         {
             if (instance == null)
                 return;
-
-            var t = typeof(Group);
-            foreach (var Fi in typeof(Thost)
+            var Thost = instance.GetType();
+            var t = typeof(TChild);
+            foreach (var Fi in Thost
                 .GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-                .Where(fi => t.IsAssignableFrom(fi.FieldType)).ToList()) {
-                var n = Fi.Name;
+                .Where(fi => t.IsAssignableFrom(fi.FieldType)).ToList())
+            {
                 if (Fi.FieldType != typeof(Type)) {
-                    var it = (Group) Fi.GetValue(instance);
+                    var it = (TChild) Fi.GetValue(instance);
                     if (it == null) {
-                        var Tgroup = typeof(Group<>);
-                        Fi.SetValue(instance, (Group) Dynamic.InvokeConstructor(Fi.FieldType));
+                        Fi.SetValue(instance, (TChild) Activator.CreateInstance(Fi.FieldType));
                     }
                 }
             }
+        }
+
+        public static INode InitSingleNode(object host, string name)
+        {
+            if (host == null)
+                throw new Exception("Empty host");
+
+            var Thost = host.GetType();
+            var Fi = Thost
+                .GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                .First(fi => fi.Name == name);
+                if (Fi.FieldType != typeof(Type))
+                {
+                    var it = Fi.GetValue(host);
+                    if (it == null) {
+                        var o = (INode) Activator.CreateInstance(Fi.FieldType);
+                        Fi.SetValue(host, o);
+                        return o;
+                    } else {
+                        return it as INode;
+                    }
+                }
+
+            throw new Exception("Field not found");
         }
 
         #endregion GDI
@@ -222,6 +276,7 @@ namespace ServicesPetriNet
                                 : throw new InvalidOperationException(
                                     $"Parameter of type {param.ParameterType.Name} was not found"
                                 );
+                            //TODO!!! naming 
                             var result = results.First();
                             results.RemoveAt(0);
                             return result;
@@ -229,10 +284,46 @@ namespace ServicesPetriNet
                     }
                 )
                 .ToArray();
+
+            var parameters2 = method.GetParameters()
+                .Select<ParameterInfo, object>(
+                    param =>
+                    {
+                        if (param.IsOut)
+                        {
+                            return null;
+                        }
+
+                        if (param.ParameterType.IsList())
+                        {
+                            return dict.TryGetValue(param.ParameterType, out var pValue)
+                                ? pValue
+                                : throw new InvalidOperationException(
+                                    $"Parameter of type {param.ParameterType.Name} was not found"
+                                );
+                        }
+                        else
+                        {
+                            var listType = typeof(List<>);
+                            var constructedListType = listType.MakeGenericType(param.ParameterType);
+                            var results = dict.TryGetValue(constructedListType, out var pValue)
+                                ? pValue
+                                : throw new InvalidOperationException(
+                                    $"Parameter of type {param.ParameterType.Name} was not found"
+                                );
+                            //TODO!!! naming 
+                            var result = results.First();
+                            results.RemoveAt(0);
+                            return result;
+                        }
+                    }
+                )
+                .ToArray();
+
             var rp = method.Invoke(actor, parameters);
 
             var outs = new Dictionary<Type, List<MarkType>>();
-            Action<object> act = (variable) =>
+            Action<object> release = (variable) =>
             {
                 var marks = new List<MarkType>();
                 var isArray = variable.IsList();
@@ -261,12 +352,12 @@ namespace ServicesPetriNet
                 var o = method.GetParameters()[index];
                 if (o.IsOut) {
                     var variable = parameters[index];
-                    act(variable);
+                    release(variable);
                 }
             }
 
             if (method.ReturnType != typeof(void)) {
-                act(rp);
+                release(rp);
             }
 
             return outs;
@@ -318,17 +409,29 @@ namespace ServicesPetriNet
             );
         }
 
-        public static Transition In<T>(this Transition t, Place @from, Link.Count howMany = Link.Count.One,
+        public static Transition In<T>(this Transition t, Place @from,  Link.Count howMany = Link.Count.One, string byName = "",
             int count = -1)
         {
-            t.Links.Add(new Link<T>((INode) @from, t, howMany, count));
+            CheckNulls(t, @from);
+
+            t.Links.Add(new Link<T>((INode) @from, t, byName, howMany, count));
             return t;
+        }
+
+        public static void CheckNulls(Transition t, Place p)
+        {
+            if (p == null || t == null)
+            {
+                throw new Exception("traget and transition should be instantiated before configuration.");
+            }
         }
 
         public static Transition Out<T>(this Transition t, Place to, Link.Count howMany = Link.Count.One,
             int count = -1)
         {
-            t.Links.Add(new Link<T>(t, to, howMany, count));
+            CheckNulls(t, to);
+
+            t.Links.Add(new Link<T>(t, to, "", howMany, count));
             return t;
         }
 

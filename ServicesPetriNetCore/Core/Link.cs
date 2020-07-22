@@ -8,20 +8,20 @@ namespace ServicesPetriNet {
         public INode From;
         public INode To;
         public Type What { get; }
-
+        public string ByTheNameOf { get;}
         public Count CountStrategy { get; }
         public int CountStrategyAmmount { get; }
 
         public enum Count { One, All, Some, None }
 
-        public Link(INode @from, INode to, Type what, Count howMany, int count = -1)
+        public Link(INode @from, INode to, Type what, string byName = "",  Count howMany = Count.One, int count = -1)
         {
             From = @from;
             To = to;
             What = what;
             CountStrategy = howMany;
             CountStrategyAmmount = count;
-
+            ByTheNameOf = byName;
             if (howMany == Count.One)
             {
                 CountStrategyAmmount = 1;
@@ -38,10 +38,11 @@ namespace ServicesPetriNet {
 
     public class Link<T> : Link
     {
-        public Link(INode @from, INode to, Count howMany = Count.One, int count = -1) : base(
+        public Link(INode @from, INode to, string byName = "", Count howMany = Count.One,  int count = -1) : base(
             @from,
             to,
             typeof(T),
+            byName,
             howMany,
             count
         )
