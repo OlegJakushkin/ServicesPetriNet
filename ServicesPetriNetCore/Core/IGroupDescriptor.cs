@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace ServicesPetriNet.Core 
+namespace ServicesPetriNet.Core
 {
     public class FieldDescriptor<T>
     {
-        public T Value;
         public List<Attribute> Attributes = new List<Attribute>();
+        public T Value;
     }
+
     public interface IGroupDescriptor
     {
         Dictionary<string, FieldDescriptor<Place>> Places { get; set; }

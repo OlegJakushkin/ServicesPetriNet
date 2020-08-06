@@ -1,9 +1,8 @@
-﻿using System;
-using ServicesPetriNet;
-using ServicesPetriNet.Core;
+﻿using ServicesPetriNet.Core;
 using ServicesPetriNet.Core.Transitions;
 using static ServicesPetriNet.Core.MarkType;
 using static ServicesPetriNet.Extensions;
+
 namespace ServicesPetriNetCore.Core.Tests
 {
     public class SimpleTransitionAtoB : Group
@@ -21,9 +20,6 @@ namespace ServicesPetriNetCore.Core.Tests
             Marks = At(A, Create<Mark>());
         }
 
-        public class Mark : MarkType
-        {
-        }
-
+        public class Mark : MarkType { }
     }
 }

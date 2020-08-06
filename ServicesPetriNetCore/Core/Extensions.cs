@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel.Design;
 using System.Linq;
 using System.Reflection;
 using Dynamitey;
-using Dynamitey.DynamicObjects;
 using ServicesPetriNet.Core;
 
 namespace ServicesPetriNet
@@ -16,14 +14,16 @@ namespace ServicesPetriNet
             Func<T, IEnumerable<T>> childSelector)
         {
             var stack = new Stack<T>(items);
-            while (stack.Any())
-            {
+            while (stack.Any()) {
                 var next = stack.Pop();
                 yield return next;
                 foreach (var child in childSelector(next))
                     stack.Push(child);
             }
         }
+
+
+        public static List<MarkType> GetMarks(this Place p) { return MarksController.GetPlaceMarks(p); }
 
         #region GDI
 
@@ -49,12 +49,14 @@ namespace ServicesPetriNet
             var Thost = instance.GetType();
             foreach (var Fi in Thost
                 .GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-                .Where(fi => t.IsAssignableFrom(fi.FieldType)).ToList()) {
-                allFields.Add(Fi.Name, new FieldDescriptor<Tbase>() {
-                Value = (Tbase) Fi.GetValue(instance),
-                Attributes = Fi.GetCustomAttributes(typeof(Attribute), true).Cast<Attribute>().ToList()
-                    });
-            }
+                .Where(fi => t.IsAssignableFrom(fi.FieldType)).ToList())
+                allFields.Add(
+                    Fi.Name,
+                    new FieldDescriptor<Tbase> {
+                        Value = (Tbase) Fi.GetValue(instance),
+                        Attributes = Fi.GetCustomAttributes(typeof(Attribute), true).Cast<Attribute>().ToList()
+                    }
+                );
 
             t = typeof(List<Tbase>);
 
@@ -63,12 +65,15 @@ namespace ServicesPetriNet
                 .Where(fi => t.IsAssignableFrom(fi.FieldType)).ToList()) {
                 var l = (List<Tbase>) Fi.GetValue(instance);
                 var iterator = 0;
-                l.ForEach(i=> allFields.Add(Fi.Name + "_" + iterator++, new FieldDescriptor<Tbase>()
-                {
-                    Value = (Tbase)i,
-                    Attributes = Fi.GetCustomAttributes(typeof(Attribute), true).Cast<Attribute>().ToList()
-                })); 
-                
+                l.ForEach(
+                    i => allFields.Add(
+                        Fi.Name + "_" + iterator++,
+                        new FieldDescriptor<Tbase> {
+                            Value = i,
+                            Attributes = Fi.GetCustomAttributes(typeof(Attribute), true).Cast<Attribute>().ToList()
+                        }
+                    )
+                );
             }
 
             return allFields;
@@ -83,14 +88,10 @@ namespace ServicesPetriNet
             foreach (var Fi in Thost
                 .GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
                 .Where(fi => t.IsAssignableFrom(fi.FieldType)).ToList())
-            {
                 if (Fi.FieldType != typeof(Type)) {
                     var it = (TChild) Fi.GetValue(instance);
-                    if (it == null) {
-                        Fi.SetValue(instance, (TChild) Activator.CreateInstance(Fi.FieldType));
-                    }
+                    if (it == null) Fi.SetValue(instance, (TChild) Activator.CreateInstance(Fi.FieldType));
                 }
-            }
         }
 
         public static INode InitSingleNode(object host, string name)
@@ -102,24 +103,23 @@ namespace ServicesPetriNet
             var Fi = Thost
                 .GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
                 .First(fi => fi.Name == name);
-                if (Fi.FieldType != typeof(Type))
-                {
-                    var it = Fi.GetValue(host);
-                    if (it == null) {
-                        var o = (INode) Activator.CreateInstance(Fi.FieldType);
-                        Fi.SetValue(host, o);
-                        return o;
-                    } else {
-                        return it as INode;
-                    }
+            if (Fi.FieldType != typeof(Type)) {
+                var it = Fi.GetValue(host);
+                if (it == null) {
+                    var o = (INode) Activator.CreateInstance(Fi.FieldType);
+                    Fi.SetValue(host, o);
+                    return o;
                 }
+
+                return it as INode;
+            }
 
             throw new Exception("Field not found");
         }
 
         #endregion GDI
 
-             
+
         #region Transition
 
         public static Transition Action<T>(this Transition t)
@@ -134,7 +134,7 @@ namespace ServicesPetriNet
         public static bool Check(this Link l)
         {
             var result = false;
-             if (l.From is Place p) {
+            if (l.From is Place p) {
                 var marks = p.GetMarks();
                 switch (l.CountStrategy) {
                     case Link.Count.One:
@@ -184,21 +184,19 @@ namespace ServicesPetriNet
             if (listParams
                 .Select(p => (p as IEnumerable).AsQueryable().ElementType)
                 .Any(p => paramsToCheck.Contains(p))
-            ) {
+            )
                 throw new Exception(
                     "Error: list and seprate param. You can use (Tin1,..., Tin1) as Action  arguments or a single List<Tin1> as argument," +
                     " note that order is not guaranteed so " +
                     "(Tin1 A, Tin1 B) shall mean the same as (Tin1 B, Tin1 A) for your action"
                 );
-            }
 
-            if (listParams.GroupBy(n => n).Any(c => c.Count() > 1)) {
+            if (listParams.GroupBy(n => n).Any(c => c.Count() > 1))
                 throw new Exception(
                     "Error: Two+ of same type lists in Action. You can use (Tin1,..., Tin1) as Action  arguments or a single List<Tin1> as argument," +
                     " note that order is not guaranteed so " +
                     "(Tin1 A, Tin1 B) shall mean the same as (Tin1 B, Tin1 A) for your action"
                 );
-            }
 
             return true;
         }
@@ -228,10 +226,7 @@ namespace ServicesPetriNet
                 return result;
             }
 
-            public bool Equals(LinkKey x, LinkKey y)
-            {
-                return x.Equals(y);
-            }
+            public bool Equals(LinkKey x, LinkKey y) { return x.Equals(y); }
 
             public int GetHashCode(LinkKey obj) { return Type.GetHashCode() + Name.GetHashCode(); }
         }
@@ -250,14 +245,12 @@ namespace ServicesPetriNet
 
                         var listType = typeof(List<>);
                         var constructedListType = listType.MakeGenericType(l.What);
-                        var key = new LinkKey() {
+                        var key = new LinkKey {
                             Name = l.ByTheNameOf,
                             Type = constructedListType
                         };
                         if (accumulator.TryGetValue(key, out var value) &&
-                            value != null) {
-                            marks = value;
-                        }
+                            value != null) marks = value;
 
                         if (l.CountStrategy == Link.Count.All) {
                             marks.AddRange(p.GetMarks().Where(m => m.GetType() == l.What).ToList());
@@ -267,8 +260,8 @@ namespace ServicesPetriNet
                                     p.GetMarks().Where(m => m.GetType() == l.What)
                                         .Take(l.CountStrategyAmmount)
                                         .ToList()
-                                ;  marks.AddRange(ms
-                            );
+                                ;
+                            marks.AddRange(ms);
                         }
 
                         marks.MoveMarksTo(t);
@@ -291,42 +284,37 @@ namespace ServicesPetriNet
                 .ToList();
 
             //Fill all named paramerters
-            var ps = method.GetParameters().Select(param =>
-            {
-                object result = param;
-                if (dict.Any(pair => pair.Key.Name == param.Name)) {
-                    if (param.IsOut)
-                    {
-                        throw  new Exception("Link Name shall be of action input parameter ");
-                    }
-                    var k = dict.First(pair => pair.Key.Name == param.Name);
+            var ps = method.GetParameters().Select(
+                param =>
+                {
+                    object result = param;
+                    if (dict.Any(pair => pair.Key.Name == param.Name)) {
+                        if (param.IsOut) throw new Exception("Link Name shall be of action input parameter ");
+                        var k = dict.First(pair => pair.Key.Name == param.Name);
 
-                    if (param.ParameterType.IsList()) {
-                        result =  k.Value;
-                    }
-                    else
-                    {
-                        result = k.Value.First();
-                        k.Value.RemoveAt(0);
+                        if (param.ParameterType.IsList()) {
+                            result = k.Value;
+                        } else {
+                            result = k.Value.First();
+                            k.Value.RemoveAt(0);
+                        }
+
+                        dict.Remove(k.Key);
                     }
 
-                    dict.Remove(k.Key);
+                    return result;
                 }
-
-                return result;
-            }).ToArray();
+            ).ToArray();
 
             //Fill all other paramerters
             for (var index = 0; index < ps.Length; index++) {
                 var o = ps[index];
                 if (o is ParameterInfo) {
                     var param = (ParameterInfo) o;
-                    if (param.IsOut) {
-                        ps[index] = null;
-                    }
+                    if (param.IsOut) ps[index] = null;
 
                     if (param.ParameterType.IsList()) {
-                        var key = new LinkKey() {
+                        var key = new LinkKey {
                             Name = "",
                             Type = param.ParameterType
                         };
@@ -336,12 +324,10 @@ namespace ServicesPetriNet
                                 $"Parameter of type {param.ParameterType.Name} was not found"
                             );
                         dict.Remove(key);
-                    }
-                    else {
+                    } else {
                         var listType = typeof(List<>);
                         var constructedListType = listType.MakeGenericType(param.ParameterType);
-                        var key = new LinkKey()
-                        {
+                        var key = new LinkKey {
                             Name = "",
                             Type = constructedListType
                         };
@@ -352,9 +338,7 @@ namespace ServicesPetriNet
                             );
                         ps[index] = results.First();
                         results.RemoveAt(0);
-                        if (results.Count == 0) {
-                            dict.Remove(key);
-                        }
+                        if (results.Count == 0) dict.Remove(key);
                     }
                 }
             }
@@ -363,27 +347,19 @@ namespace ServicesPetriNet
             var rp = method.Invoke(actor, ps);
 
             var outs = new Dictionary<Type, List<MarkType>>();
-            Action<object> release = (variable) =>
+            Action<object> release = variable =>
             {
                 var marks = new List<MarkType>();
                 var isArray = variable.IsList();
                 Type type;
-                if (isArray) {
-                    type = (variable as IEnumerable).AsQueryable().ElementType;
-                } else {
-                    type = variable.GetType();
-                }
+                if (isArray) type = (variable as IEnumerable).AsQueryable().ElementType;
+                else type = variable.GetType();
 
                 if (outs.TryGetValue(type, out var value) &&
-                    value != null) {
-                    marks = value;
-                }
+                    value != null) marks = value;
 
-                if (variable.IsList()) {
-                    marks.AddRange((List<MarkType>) variable);
-                } else {
-                    marks.Add((MarkType) variable);
-                }
+                if (variable.IsList()) marks.AddRange((List<MarkType>) variable);
+                else marks.Add((MarkType) variable);
 
                 outs[type] = marks;
             };
@@ -396,9 +372,7 @@ namespace ServicesPetriNet
                 }
             }
 
-            if (method.ReturnType != typeof(void)) {
-                release(rp);
-            }
+            if (method.ReturnType != typeof(void)) release(rp);
 
             return outs;
         }
@@ -412,11 +386,8 @@ namespace ServicesPetriNet
                 {
                     var marks = new List<MarkType>();
                     if (outs.TryGetValue(l.What, out var value) &&
-                        value != null) {
-                        marks = value;
-                    } else {
-                        throw new Exception("Transitions Action had to return Tout: " + l.What);
-                    }
+                        value != null) marks = value;
+                    else throw new Exception("Transitions Action had to return Tout: " + l.What);
 
                     switch (l.CountStrategy) {
                         case Link.Count.One:
@@ -451,21 +422,20 @@ namespace ServicesPetriNet
             );
         }
 
-        public static Transition In<T>(this Transition t, Place @from,  Link.Count howMany = Link.Count.One, string byName = "",
+        public static Transition In<T>(this Transition t, Place from, Link.Count howMany = Link.Count.One,
+            string byName = "",
             int count = -1)
         {
-            CheckNulls(t, @from);
+            CheckNulls(t, from);
 
-            t.Links.Add(new Link<T>((INode) @from, t, byName, howMany, count));
+            t.Links.Add(new Link<T>(@from, t, byName, howMany, count));
             return t;
         }
 
         public static void CheckNulls(Transition t, Place p)
         {
-            if (p == null || t == null)
-            {
-                throw new Exception("traget and transition should be instantiated before configuration.");
-            }
+            if (p == null ||
+                t == null) throw new Exception("traget and transition should be instantiated before configuration.");
         }
 
         public static Transition Out<T>(this Transition t, Place to, Link.Count howMany = Link.Count.One,
@@ -478,9 +448,6 @@ namespace ServicesPetriNet
         }
 
         #endregion Transition
-
-
-        public static List<MarkType> GetMarks(this Place p) { return MarksController.GetPlaceMarks(p); }
 
         #region Marks
 

@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using ServicesPetriNet.Core;
 using ServicesPetriNet.Examples;
-using static ServicesPetriNet.Extensions;
 
 namespace ServicesPetriNet
 {
@@ -10,11 +8,11 @@ namespace ServicesPetriNet
     // todo simple router https://www.youtube.com/watch?v=rYodcvhh7b8
     // 
 
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
-            var simulation =new SimulationController<SimpleTwoHostNetwork>();
+            var simulation = new SimulationController<SimpleTwoHostNetwork>();
             simulation.SimulationStep();
             Console.ReadLine();
         }

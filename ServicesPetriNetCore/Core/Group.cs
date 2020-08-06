@@ -4,28 +4,13 @@ using System.Linq;
 using ServicesPetriNet.Core.Attributes;
 using static ServicesPetriNet.Extensions;
 
-namespace ServicesPetriNet.Core {
-
+namespace ServicesPetriNet.Core
+{
     //Group is a basic unit of Places, Transitions and logic combination in SPN
     //Pattern is for taking parts of a group and expanding it with pre-made mechanics
     //If places or transitions need to be added they shall be created mnually
     public class Group
     {
-        public IGroupDescriptor Descriptor { get; set; }
-
-        public int TimeScale { get; set; } = 1;
-
-        public List<MarkType> Marks
-        {
-            get => Descriptor.Marks;
-            set => Descriptor.Refresh();
-        }
-        public List<Pattern> Patterns
-        {
-            get => Descriptor.Patterns;
-            set => Descriptor.Refresh();
-        }
-
         public Group()
         {
             InitAllTypeInstances<Place>(this);
@@ -35,13 +20,20 @@ namespace ServicesPetriNet.Core {
             SetTimeScales();
         }
 
+        public IGroupDescriptor Descriptor { get; set; }
+
+        public int TimeScale { get; set; } = 1;
+
+        public List<MarkType> Marks { get => Descriptor.Marks; set => Descriptor.Refresh(); }
+
+        public List<Pattern> Patterns { get => Descriptor.Patterns; set => Descriptor.Refresh(); }
+
         public void SetGlobatTransitionTimeScales()
         {
             Action<Group> g = gr =>
             {
-                foreach (var keyValuePair in gr.Descriptor.Transitions) {
+                foreach (var keyValuePair in gr.Descriptor.Transitions)
                     keyValuePair.Value.Value.TimeScale = gr.TimeScale;
-                }
             };
 
             Action<FieldDescriptor<Group>> a = null;
@@ -81,5 +73,4 @@ namespace ServicesPetriNet.Core {
                 );
         }
     }
-
 }

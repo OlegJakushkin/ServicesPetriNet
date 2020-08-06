@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 using MiscUtil;
@@ -25,7 +24,9 @@ namespace ServicesPetriNetCore.Core.Tests
 
             public static Mark operator +(Mark a, Mark b)
             {
-                return new Mark() { value = a.value + b.value };
+                return new Mark {
+                    value = a.value + b.value
+                };
             }
         }
 
@@ -37,23 +38,23 @@ namespace ServicesPetriNetCore.Core.Tests
 
             private Transition reduction;
 
-            public AggregateAllPattern(ICollection<Place> inputs , Place output)
+            public AggregateAllPattern(ICollection<Place> inputs, Place output)
             {
                 Inputs = inputs.ToList();
                 Output = output;
-                Register( nameof(reduction));
+                Register(nameof(reduction));
 
                 reduction.Out<TMark>(Output);
                 Inputs.ForEach(place => reduction.In<Mark>(place, Link.Count.All));
                 reduction.Action<Act>();
             }
 
-            class Act
+            private class Act
             {
                 [UsedImplicitly]
                 public TMark Action(List<TMark> inputs)
                 {
-                    return inputs.Aggregate(new TMark(), (mark, mark1) => Operator.Add<TMark>(mark, mark1));
+                    return inputs.Aggregate(new TMark(), (mark, mark1) => Operator.Add(mark, mark1));
                 }
             }
         }

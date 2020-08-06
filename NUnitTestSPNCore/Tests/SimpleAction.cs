@@ -1,8 +1,6 @@
-﻿using System;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 using ServicesPetriNet;
 using ServicesPetriNet.Core;
-using ServicesPetriNet.Core.Attributes;
 
 namespace ServicesPetriNetCore.Core.Tests
 {
@@ -33,7 +31,9 @@ namespace ServicesPetriNetCore.Core.Tests
             [UsedImplicitly]
             public static Mark Action(Mark fromA, Mark fromB)
             {
-                return  new Mark(){value = fromA.value+fromB.value};
+                return new Mark {
+                    value = fromA.value + fromB.value
+                };
             }
         }
     }
