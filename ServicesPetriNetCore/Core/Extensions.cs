@@ -119,6 +119,7 @@ namespace ServicesPetriNet
 
         #endregion GDI
 
+             
         #region Transition
 
         public static Transition Action<T>(this Transition t)
@@ -133,7 +134,7 @@ namespace ServicesPetriNet
         public static bool Check(this Link l)
         {
             var result = false;
-            if (l.From is Place p) {
+             if (l.From is Place p) {
                 var marks = p.GetMarks();
                 switch (l.CountStrategy) {
                     case Link.Count.One:
@@ -205,18 +206,43 @@ namespace ServicesPetriNet
         //First check executability
         public static bool Check(this Transition t)
         {
-            return t.Links
+            var result = t.Links
                 .Where(l => l.From is Place)
-                .Any(link => !link.Check());
+                .All(link => link.Check());
+            return result;
+        }
+
+        public struct LinkKey : IEqualityComparer<LinkKey>
+        {
+            public Type Type;
+            public string Name;
+
+            public override bool Equals(object? obj)
+            {
+                var result = false;
+                if (obj != null) {
+                    var other = (LinkKey) obj;
+                    result = other.Type == Type && other.Name == Name;
+                }
+
+                return result;
+            }
+
+            public bool Equals(LinkKey x, LinkKey y)
+            {
+                return x.Equals(y);
+            }
+
+            public int GetHashCode(LinkKey obj) { return Type.GetHashCode() + Name.GetHashCode(); }
         }
 
         //Second Move marks to transition
-        public static Dictionary<Type, List<MarkType>> Gather(this Transition t)
+        public static Dictionary<LinkKey, List<MarkType>> Gather(this Transition t)
         {
             return t.Links
                 .Where(l => l.From is Place)
                 .Aggregate(
-                    new Dictionary<Type, List<MarkType>>(),
+                    new Dictionary<LinkKey, List<MarkType>>(),
                     (accumulator, l) =>
                     {
                         var p = (Place) l.From;
@@ -224,8 +250,11 @@ namespace ServicesPetriNet
 
                         var listType = typeof(List<>);
                         var constructedListType = listType.MakeGenericType(l.What);
-
-                        if (accumulator.TryGetValue(constructedListType, out var value) &&
+                        var key = new LinkKey() {
+                            Name = l.ByTheNameOf,
+                            Type = constructedListType
+                        };
+                        if (accumulator.TryGetValue(key, out var value) &&
                             value != null) {
                             marks = value;
                         }
@@ -234,93 +263,104 @@ namespace ServicesPetriNet
                             marks.AddRange(p.GetMarks().Where(m => m.GetType() == l.What).ToList());
                         } else if (l.CountStrategy == Link.Count.Some ||
                                    l.CountStrategy == Link.Count.One) {
-                            marks.AddRange(
-                                p.GetMarks().Where(m => m.GetType() == l.What).Take(l.CountStrategyAmmount).ToList()
+                            var ms =
+                                    p.GetMarks().Where(m => m.GetType() == l.What)
+                                        .Take(l.CountStrategyAmmount)
+                                        .ToList()
+                                ;  marks.AddRange(ms
                             );
                         }
 
                         marks.MoveMarksTo(t);
 
-                        accumulator[l.What] = marks;
+                        accumulator[key] = marks;
                         return accumulator;
                     }
                 );
         }
 
         //Third Execute transition
-        public static Dictionary<Type, List<MarkType>> Act(this Transition t, Dictionary<Type, List<MarkType>> dict)
+        public static Dictionary<Type, List<MarkType>> Act(this Transition t, Dictionary<LinkKey, List<MarkType>> dict)
         {
             var actor = Dynamic.InvokeConstructor(t.Action);
 
             var method = t.Action.GetMethod(nameof(Action));
 
-            var parameters = method.GetParameters()
-                .Select<ParameterInfo, object>(
-                    param =>
-                    {
-                        if (param.IsOut) {
-                            return null;
-                        }
 
-                        if (param.ParameterType.IsList()) {
-                            return dict.TryGetValue(param.ParameterType, out var pValue)
-                                ? pValue
-                                : throw new InvalidOperationException(
-                                    $"Parameter of type {param.ParameterType.Name} was not found"
-                                );
-                        } else {
-                            var listType = typeof(List<>);
-                            var constructedListType = listType.MakeGenericType(param.ParameterType);
-                            var results = dict.TryGetValue(constructedListType, out var pValue)
-                                ? pValue
-                                : throw new InvalidOperationException(
-                                    $"Parameter of type {param.ParameterType.Name} was not found"
-                                );
-                            //TODO!!! naming 
-                            var result = results.First();
-                            results.RemoveAt(0);
-                            return result;
+            var named = dict.Where((pair, i) => pair.Key.Name != "")
+                .ToList();
+
+            //Fill all named paramerters
+            var ps = method.GetParameters().Select(param =>
+            {
+                object result = param;
+                if (dict.Any(pair => pair.Key.Name == param.Name)) {
+                    if (param.IsOut)
+                    {
+                        throw  new Exception("Link Name shall be of action input parameter ");
+                    }
+                    var k = dict.First(pair => pair.Key.Name == param.Name);
+
+                    if (param.ParameterType.IsList()) {
+                        result =  k.Value;
+                    }
+                    else
+                    {
+                        result = k.Value.First();
+                        k.Value.RemoveAt(0);
+                    }
+
+                    dict.Remove(k.Key);
+                }
+
+                return result;
+            }).ToArray();
+
+            //Fill all other paramerters
+            for (var index = 0; index < ps.Length; index++) {
+                var o = ps[index];
+                if (o is ParameterInfo) {
+                    var param = (ParameterInfo) o;
+                    if (param.IsOut) {
+                        ps[index] = null;
+                    }
+
+                    if (param.ParameterType.IsList()) {
+                        var key = new LinkKey() {
+                            Name = "",
+                            Type = param.ParameterType
+                        };
+                        ps[index] = dict.TryGetValue(key, out var pValue)
+                            ? pValue
+                            : throw new InvalidOperationException(
+                                $"Parameter of type {param.ParameterType.Name} was not found"
+                            );
+                        dict.Remove(key);
+                    }
+                    else {
+                        var listType = typeof(List<>);
+                        var constructedListType = listType.MakeGenericType(param.ParameterType);
+                        var key = new LinkKey()
+                        {
+                            Name = "",
+                            Type = constructedListType
+                        };
+                        var results = dict.TryGetValue(key, out var pValue)
+                            ? pValue
+                            : throw new InvalidOperationException(
+                                $"Parameter of type {param.ParameterType.Name} was not found"
+                            );
+                        ps[index] = results.First();
+                        results.RemoveAt(0);
+                        if (results.Count == 0) {
+                            dict.Remove(key);
                         }
                     }
-                )
-                .ToArray();
+                }
+            }
 
-            var parameters2 = method.GetParameters()
-                .Select<ParameterInfo, object>(
-                    param =>
-                    {
-                        if (param.IsOut)
-                        {
-                            return null;
-                        }
 
-                        if (param.ParameterType.IsList())
-                        {
-                            return dict.TryGetValue(param.ParameterType, out var pValue)
-                                ? pValue
-                                : throw new InvalidOperationException(
-                                    $"Parameter of type {param.ParameterType.Name} was not found"
-                                );
-                        }
-                        else
-                        {
-                            var listType = typeof(List<>);
-                            var constructedListType = listType.MakeGenericType(param.ParameterType);
-                            var results = dict.TryGetValue(constructedListType, out var pValue)
-                                ? pValue
-                                : throw new InvalidOperationException(
-                                    $"Parameter of type {param.ParameterType.Name} was not found"
-                                );
-                            //TODO!!! naming 
-                            var result = results.First();
-                            results.RemoveAt(0);
-                            return result;
-                        }
-                    }
-                )
-                .ToArray();
-
-            var rp = method.Invoke(actor, parameters);
+            var rp = method.Invoke(actor, ps);
 
             var outs = new Dictionary<Type, List<MarkType>>();
             Action<object> release = (variable) =>
@@ -351,7 +391,7 @@ namespace ServicesPetriNet
             for (var index = 0; index < method.GetParameters().Length; index++) {
                 var o = method.GetParameters()[index];
                 if (o.IsOut) {
-                    var variable = parameters[index];
+                    var variable = ps[index];
                     release(variable);
                 }
             }
@@ -364,6 +404,7 @@ namespace ServicesPetriNet
         }
 
         //Fourth move to outputs
+        //Todo test multiple outs of same type
         public static void Distribute(this Transition t, Dictionary<Type, List<MarkType>> outs)
         {
             t.Links.Where(l => l.To.GetType() == typeof(Place)).ToList().ForEach(
@@ -381,8 +422,9 @@ namespace ServicesPetriNet
                         case Link.Count.One:
                         {
                             var m = marks.First();
-                            marks.Remove(m);
                             m.Host = l.To;
+                            var ms = MarksController.Marks;
+                            marks.Remove(m);
                             break;
                         }
                         case Link.Count.All:

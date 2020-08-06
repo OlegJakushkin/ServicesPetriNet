@@ -1,4 +1,5 @@
-﻿namespace ServicesPetriNet.Core {
+﻿namespace ServicesPetriNet.Core
+{
     public interface IPart
     {
         int Number { get; set; }

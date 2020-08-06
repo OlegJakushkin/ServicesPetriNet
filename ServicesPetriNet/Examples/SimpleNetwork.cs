@@ -5,8 +5,8 @@ namespace ServicesPetriNet.Examples
 {
     public class SimpleNetwork : Group
     {
-        public Place NetworkFrom, NetworkTo;
         private Place Channel;
+        public Place NetworkFrom, NetworkTo;
 
         private Transition Send, Receive;
 

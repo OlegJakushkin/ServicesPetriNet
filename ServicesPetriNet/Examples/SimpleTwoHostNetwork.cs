@@ -5,11 +5,10 @@ namespace ServicesPetriNet.Examples
 {
     public class SimpleTwoHostNetwork : Group
     {
-        public Place ServiceA, ServiceB;
-
         public Transition DecomposeA, ComposeB, DecomposeB, ComposeA;
 
         public SimpleNetwork FromA, FromB;
+        public Place ServiceA, ServiceB;
 
         public SimpleTwoHostNetwork()
         {
@@ -29,7 +28,7 @@ namespace ServicesPetriNet.Examples
             Marks = At(ServiceA, MarkType.Create<Message>(128))
                     .At(ServiceB, MarkType.Create<Message>(256))
                     .At(ServiceB, MarkType.Create<Message>(128))
-            ;
+                ;
         }
     }
 }

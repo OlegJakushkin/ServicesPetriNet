@@ -40,5 +40,11 @@ namespace ServicesPetriNet.Core {
             Patterns.ForEach(p => p.RefreshHostDescriptor(this));
         }
 
+        public void ApplyToAllSubGroups(Action<FieldDescriptor<Group>> action)
+        {
+            foreach (var fieldDescriptor in SubGroups) {
+                action(fieldDescriptor.Value);
+            }
+        }
     }
 }

@@ -10,7 +10,7 @@ namespace ServicesPetriNet.Core {
         private class TransitionStage
         {
             public Transition Transition;
-            public Dictionary<Type, List<MarkType>> Marks;
+            public Dictionary<Extensions.LinkKey, List<MarkType>> Marks;
         }
 
         public Group TopGroup;
@@ -19,15 +19,18 @@ namespace ServicesPetriNet.Core {
             get;
             set;
         }
-        
+
+        private int step;
         public void SimulationStep()
         {
-            
+            step += 1;
             var readyToAct = new List<TransitionStage>();
             foreach (var transition in Transitions) {
                 var t = transition.Value;
-                if (t.Check()) {
-                    if (transition.Attributes.First(a => a is ProbabiletyAttribute) is ProbabiletyAttribute pa) {
+                if ( step % t.TimeScale == 0 &&  t.Check()) {
+
+                    if (transition.Attributes.Any(a => a is ProbabiletyAttribute) 
+                        && transition.Attributes.First(a => a is ProbabiletyAttribute) is ProbabiletyAttribute pa) {
                         var pad = pa.Distribution as IRandomNumberGenerator<int>;
                         if (pad != null) {
                             if (pad.Generate() <= 0) {
@@ -51,11 +54,13 @@ namespace ServicesPetriNet.Core {
                 var results = t.Act(transition.Marks);
                 t.Distribute(results);
             }
+
         }
 
-        SimulationController()
+        public SimulationController()
         {
             TopGroup = new TGroup();
+            TopGroup.SetGlobatTransitionTimeScales();
 
             var fat = TopGroup.Descriptor.SubGroups.Values
                 .Traverse(g => g.Value.Descriptor.SubGroups.Values)
@@ -66,7 +71,8 @@ namespace ServicesPetriNet.Core {
             Transitions = fat.OrderBy(
                     x =>
                     {
-                        if (x.Attributes.First(a => a is PrioretyAttribute) is PrioretyAttribute pa) {
+                        if (x.Attributes.Any(a => a is PrioretyAttribute)) {
+                            var pa = (PrioretyAttribute)x.Attributes.First(a => a is PrioretyAttribute) ;
                             return pa.Priorety;
                         }
                         return 0;

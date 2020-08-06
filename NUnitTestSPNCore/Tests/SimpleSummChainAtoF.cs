@@ -41,7 +41,9 @@ namespace ServicesPetriNetCore.Core.Tests
             [UsedImplicitly]
             public void Action(List<Mark> marks, out Mark result)
             {
-                result = new Mark() { value = marks.Aggregate(0, (i, mark) => i + mark.value) };
+                result = new Mark {
+                    value = marks.Aggregate(0, (i, mark) => i + mark.value)
+                };
             }
         }
     }

@@ -1,4 +1,5 @@
-﻿namespace ServicesPetriNet.Core {
+﻿namespace ServicesPetriNet.Core
+{
     public interface ITreePart
     {
         bool HasParent { get; }

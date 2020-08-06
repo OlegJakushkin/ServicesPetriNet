@@ -1,6 +1,7 @@
 ﻿using JetBrains.Annotations;
 
-namespace ServicesPetriNet.Core.Transitions {
+namespace ServicesPetriNet.Core.Transitions
+{
     public class OneToOne<Tin, Tout>
         where Tin : MarkType
         where Tout : MarkType, new()
@@ -20,7 +21,7 @@ namespace ServicesPetriNet.Core.Transitions {
             return result;
         }
     }
+
     public class OneToOne<T> : OneToOne<T, T>
-        where T : MarkType, new()
-    { }
+        where T : MarkType, new() { }
 }

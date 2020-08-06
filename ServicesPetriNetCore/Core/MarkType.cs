@@ -15,7 +15,7 @@ namespace ServicesPetriNet
 
             public static List<MarkType> GetPlaceMarks(Place p)
             {
-                return Marks.Where(type => type != null && type.Host.Equals( p) ).ToList();
+                return Marks.Where(t =>  t.Host.Equals( p) ).ToList();
             }
 
             //ToDo: toexpansion
@@ -48,7 +48,6 @@ namespace ServicesPetriNet
                     }
                 }
                 var result = (MarkType)o;
-                MarksController.Marks.Add(result);
                 return result;
             }
 
@@ -56,6 +55,7 @@ namespace ServicesPetriNet
             {
                 Parts = new List<IPart>();
                 Parent = parent;
+                MarksController.Marks.Add(this);
             }
 
             public bool HasParent => Parent != null;

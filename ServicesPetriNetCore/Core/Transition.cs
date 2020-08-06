@@ -12,7 +12,8 @@ namespace ServicesPetriNet.Core
     // - public void  Action(T1in ps, ..., TNin ps, out T1out,..., out TNout)
     public class Transition : INode
     {
-        public List<Link> Links;
+        public int TimeScale = 1;
+        public List<Link> Links = new List<Link>();
         public Type Action;
     }
 }

@@ -1,5 +1,4 @@
-﻿using ServicesPetriNet;
-using ServicesPetriNet.Core;
+﻿using ServicesPetriNet.Core;
 using ServicesPetriNet.Core.Attributes;
 using ServicesPetriNet.Core.Transitions;
 using static ServicesPetriNet.Extensions;
@@ -12,10 +11,10 @@ namespace ServicesPetriNetCore.Core.Tests
 
         public Transition AtoC, BtoC;
 
-        [Probabilety(0.5)]
+        [Probabilety()]
         public Transition CtoA;
 
-        [Probabilety(1,0,1,0,1,0)]
+        [Probabilety(1, 0, 1, 0, 1, 0)]
         public Transition CtoB;
 
         public SimpleAssistProbabiletyLoop()
@@ -39,8 +38,6 @@ namespace ServicesPetriNetCore.Core.Tests
             Marks = At(A, MarkType.Create<Mark>());
         }
 
-        public class Mark : MarkType
-        {
-        }
+        public class Mark : MarkType { }
     }
 }

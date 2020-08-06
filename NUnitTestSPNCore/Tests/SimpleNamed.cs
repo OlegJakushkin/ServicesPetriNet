@@ -31,7 +31,9 @@ namespace ServicesPetriNetCore.Core.Tests
             [UsedImplicitly]
             public Mark Action(Mark B, Mark A)
             {
-                return new Mark() { value = B.value - A.value };
+                return new Mark {
+                    value = B.value - A.value
+                };
             }
         }
     }
