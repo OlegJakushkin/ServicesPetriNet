@@ -43,10 +43,9 @@ namespace ServicesPetriNetCore.Core.Tests
                 Inputs = inputs.ToList();
                 Output = output;
                 Register(nameof(reduction));
-
+                reduction.Action<Act>();
                 reduction.Out<TMark>(Output);
                 Inputs.ForEach(place => reduction.In<Mark>(place, Link.Count.All));
-                reduction.Action<Act>();
             }
 
             private class Act

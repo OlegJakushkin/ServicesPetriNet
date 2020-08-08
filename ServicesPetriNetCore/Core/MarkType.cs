@@ -82,7 +82,7 @@ namespace ServicesPetriNet
                 var argId = 0;
                 foreach (var fieldInfo in t.GetFields(
                     BindingFlags.DeclaredOnly |
-                    BindingFlags.Public |
+                    BindingFlags.Public | BindingFlags.NonPublic |
                     BindingFlags.Instance
                 )) {
                     var isMark = fieldInfo.FieldType == typeof(MarkType);

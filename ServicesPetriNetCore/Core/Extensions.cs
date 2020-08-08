@@ -125,7 +125,6 @@ namespace ServicesPetriNet
 
         public static Transition Action<T>(this Transition t)
         {
-            t.Links = new List<Link>();
             t.Action = typeof(T);
 
             return t;
@@ -208,7 +207,7 @@ namespace ServicesPetriNet
             return result;
         }
 
-        public static string Source(this INode o, Group g)
+        public static string DebugSource(this INode o, Group g)
         {
             var result = o.ToString();
             Action<Group> a = null;

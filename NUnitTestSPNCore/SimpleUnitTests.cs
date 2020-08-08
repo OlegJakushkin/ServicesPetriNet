@@ -62,7 +62,7 @@ namespace NUnitTestSPNCore
         public void TestMarksNaming()
         {
             var simulation = Run<SimpleNamed>(100);
-            Assert.AreEqual(1, simulation.C.GetMarks().Aggregate(0, (i, m) => i + ((SimplePattern.Mark) m).value));
+            Assert.AreEqual(1, simulation.C.GetMarks().Aggregate(0, (i, m) => i + ((SimpleNamed.Mark) m).value));
         }
 
         [Test]
