@@ -164,12 +164,9 @@ namespace ServicesPetriNet
             return result;
         }
 
-        public static bool IsList(this object o)
+        public static bool IsList(this Type o)
         {
-            if (o == null) return false;
-            return o is IList &&
-                   o.GetType().IsGenericType &&
-                   o.GetType().GetGenericTypeDefinition().IsAssignableFrom(typeof(List<>));
+            return o.FullName.StartsWith("System.Collections.Generic.List");
         }
 
         //Zero check action type arguments
@@ -179,10 +176,10 @@ namespace ServicesPetriNet
 
             var method = t.Action.GetMethod(nameof(Action));
 
-            var paramsToCheck = method.GetParameters().Where(p => !p.IsOut).Select(p => p.ParameterType);
-            var listParams = paramsToCheck.Where(p => p.IsList());
+            var paramsToCheck = method.GetParameters().Where(p => !p.IsOut).Select(p => p.ParameterType).ToList();
+            var listParams = paramsToCheck.Where(p => p.IsList()).ToList();
             if (listParams
-                .Select(p => (p as IEnumerable).AsQueryable().ElementType)
+                .Select(p => p.GenericTypeArguments.First())
                 .Any(p => paramsToCheck.Contains(p))
             )
                 throw new Exception(
@@ -318,12 +315,25 @@ namespace ServicesPetriNet
                             Name = "",
                             Type = param.ParameterType
                         };
-                        ps[index] = dict.TryGetValue(key, out var pValue)
+                         var value = dict.TryGetValue(key, out var pValue)
                             ? pValue
                             : throw new InvalidOperationException(
                                 $"Parameter of type {param.ParameterType.Name} was not found"
                             );
-                        dict.Remove(key);
+                         var elementType = param.ParameterType.GenericTypeArguments.First();
+
+
+
+                         var castMethod = typeof(Enumerable).GetMethod("Cast", BindingFlags.Static | BindingFlags.Public);
+                         var castGenericMethod = castMethod.MakeGenericMethod(new Type[] { elementType });
+                         var toListMethod = typeof(Enumerable).GetMethod("ToList", BindingFlags.Static | BindingFlags.Public);
+                         var toListGenericMethod = toListMethod.MakeGenericMethod(new Type[] { elementType });
+
+                        var eo = castGenericMethod.Invoke(null, new object[] { value });
+                        var lo = toListGenericMethod.Invoke(null, new object[] {eo});
+                        //var values = value.Select(x => Dynamic.InvokeConvert(x, elementType, true)).ToList();
+                         ps[index] = lo;
+                     dict.Remove(key);
                     } else {
                         var listType = typeof(List<>);
                         var constructedListType = listType.MakeGenericType(param.ParameterType);
@@ -350,7 +360,7 @@ namespace ServicesPetriNet
             Action<object> release = variable =>
             {
                 var marks = new List<MarkType>();
-                var isArray = variable.IsList();
+                var isArray = variable.GetType().IsList();
                 Type type;
                 if (isArray) type = (variable as IEnumerable).AsQueryable().ElementType;
                 else type = variable.GetType();
@@ -358,7 +368,7 @@ namespace ServicesPetriNet
                 if (outs.TryGetValue(type, out var value) &&
                     value != null) marks = value;
 
-                if (variable.IsList()) marks.AddRange((List<MarkType>) variable);
+                if (variable.GetType().IsList()) marks.AddRange((List<MarkType>) variable);
                 else marks.Add((MarkType) variable);
 
                 outs[type] = marks;
