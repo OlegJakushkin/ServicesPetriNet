@@ -8,15 +8,16 @@ namespace ServicesPetriNetCore.Core.Tests
     {
         public Place A, B, C;
 
-        private Transition Move;
+        public Transition MoveBA;
+        public Transition MoveABC;
 
         public SimpleEmptyCheck()
         {
-            Move.Action<OneToOne<Mark>>()
+            MoveBA.Action<OneToOne<Mark>>()
                 .In<Mark>(B)
                 .Out<Mark>(A);
 
-            Move.Action<OneToOne<Mark>>()
+            MoveABC.Action<OneToOne<Mark>>()
                 .In<Mark>(A)
                 .In<Mark>(B, Link.Count.None)
                 .Out<Mark>(C);

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.Tracing;
 using System.Linq;
 using System.Reflection;
 using Dynamitey;
@@ -204,6 +205,28 @@ namespace ServicesPetriNet
             var result = t.Links
                 .Where(l => l.From is Place)
                 .All(link => link.Check());
+            return result;
+        }
+
+        public static string Source(this INode o, Group g)
+        {
+            var result = o.ToString();
+            Action<Group> a = null;
+            a = g =>
+            {
+                var isT = g.Descriptor.Transitions.Any(pair => pair.Value.Value == o);
+                if (isT) {
+                    result =  g.GetType().Name + "." + g.Descriptor.Transitions.First(pair => pair.Value.Value == o).Key;
+                } else {
+                    var isP = g.Descriptor.Places.Any(pair => pair.Value.Value == o);
+                    if (isP) {
+                        result =  g.GetType().Name + "." + g.Descriptor.Places.First(pair => pair.Value.Value == o).Key;
+                    }
+                }
+                g.Descriptor.ApplyToAllSubGroups(descriptor => a(descriptor.Value));
+            };
+            a(g);
+
             return result;
         }
 

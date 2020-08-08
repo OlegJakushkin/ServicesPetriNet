@@ -22,5 +22,6 @@ namespace ServicesPetriNet.Core
         void Refresh();
 
         void ApplyToAllSubGroups(Action<FieldDescriptor<Group>> action);
+        dynamic DebugGetMarksTree();
     }
 }

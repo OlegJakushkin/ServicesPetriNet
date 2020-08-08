@@ -1,0 +1,20 @@
+{
+  "SimpleEmptyCheck.A": [],
+  "SimpleEmptyCheck.B": [],
+  "SimpleEmptyCheck.C": [
+    {
+      "Host": {},
+      "HasParent": false,
+      "Parent": null,
+      "Decomposed": false,
+      "Parts": []
+    },
+    {
+      "Host": {},
+      "HasParent": false,
+      "Parent": null,
+      "Decomposed": false,
+      "Parts": []
+    }
+  ]
+}

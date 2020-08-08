@@ -1,4 +1,6 @@
+using System.IO;
 using System.Linq;
+using Newtonsoft.Json;
 using NUnit.Framework;
 using ServicesPetriNet;
 using ServicesPetriNet.Core;
@@ -67,6 +69,9 @@ namespace NUnitTestSPNCore
         public void TestEmptyPlace()
         {
             var simulation = Run<SimpleEmptyCheck>(100);
+            var d = simulation.Descriptor.DebugGetMarksTree();
+            var s = JsonConvert.SerializeObject(d, Formatting.Indented);
+            File.WriteAllText("C:/Users/Натали/Documents/GitHub/ServicesPetriNet/log.json", s);
             Assert.AreEqual(2, simulation.C.GetMarks().Count);
         }
 

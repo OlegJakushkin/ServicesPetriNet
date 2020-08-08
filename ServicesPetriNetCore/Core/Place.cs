@@ -49,8 +49,10 @@ namespace ServicesPetriNet.Core
             var readyToAct = new List<TransitionStage>();
             foreach (var transition in Transitions) {
                 var t = transition.Value;
-                if (step % t.TimeScale == 0 &&
-                    t.Check()) {
+                var time = step % t.TimeScale == 0;
+                var avail = t.Check();
+                //var which = t.Source(TopGroup);
+                if (time  && avail) {
                     if (transition.Attributes.Any(a => a is ProbabiletyAttribute) &&
                         transition.Attributes.First(a => a is ProbabiletyAttribute) is ProbabiletyAttribute pa) {
                         var pad = pa.Distribution as IRandomNumberGenerator<int>;
