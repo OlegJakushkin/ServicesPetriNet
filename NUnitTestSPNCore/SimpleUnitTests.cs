@@ -34,8 +34,8 @@ namespace NUnitTestSPNCore
         [Test]
         public void TestSummChainAtoF()
         {
-            var simulation = Run<SimpleSummChainAtoF>(100);
-            var result = simulation.F.GetMarks().First() as SimpleAplusBplusCtoDviaList.Mark;
+            var simulation = Run<SimpleOutRefSummChainAtoF>(100);
+            var result =(SimpleOutRefSummChainAtoF.Mark)simulation.F.GetMarks().First() ;
             Assert.AreEqual(5 + 6 + 7 + 8, result.value);
         }
 

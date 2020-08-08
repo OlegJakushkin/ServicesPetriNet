@@ -6,13 +6,13 @@ using ServicesPetriNet.Core;
 
 namespace ServicesPetriNetCore.Core.Tests
 {
-    public class SimpleSummChainAtoF : Group
+    public class SimpleOutRefSummChainAtoF : Group
     {
         public Place A, B, C, D, E, F;
 
         private Transition SummABCtoD, SummDEtoF;
 
-        public SimpleSummChainAtoF()
+        public SimpleOutRefSummChainAtoF()
         {
             SummABCtoD.Action<Add>()
                 .In<Mark>(A)

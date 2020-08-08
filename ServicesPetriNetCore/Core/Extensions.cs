@@ -308,7 +308,10 @@ namespace ServicesPetriNet
                 var o = ps[index];
                 if (o is ParameterInfo) {
                     var param = (ParameterInfo) o;
-                    if (param.IsOut) ps[index] = null;
+                    if (param.IsOut) {
+                        ps[index] = null;
+                        continue;
+                    }
 
                     if (param.ParameterType.IsList()) {
                         var key = new LinkKey {

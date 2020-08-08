@@ -76,6 +76,9 @@ namespace ServicesPetriNet.Core
                 var results = t.Act(transition.Marks);
                 t.Distribute(results);
             }
+
+            MarksController.Marks.RemoveAll(mark => mark.Host is Transition);
+
         }
 
         private class TransitionStage
