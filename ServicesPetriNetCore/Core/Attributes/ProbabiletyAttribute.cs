@@ -1,6 +1,7 @@
 ﻿using System;
 using Accord.Statistics.Distributions;
 using Accord.Statistics.Distributions.Univariate;
+using Newtonsoft.Json;
 
 namespace ServicesPetriNet.Core.Attributes
 {
@@ -25,23 +26,7 @@ namespace ServicesPetriNet.Core.Attributes
             Distribution.Fit(values);
         }
 
+        [JsonIgnore]
         public IDistribution Distribution { get; }
-    }
-
-    [AttributeUsage(AttributeTargets.Field)]
-    public class PrioretyAttribute : Attribute
-    {
-        public PrioretyAttribute(int Priorety = 999) { Priorety = Priorety; }
-
-        public int Priorety { get; }
-    }
-
-
-    [AttributeUsage(AttributeTargets.Field)]
-    public class TimeScaleAttribute : Attribute
-    {
-        public TimeScaleAttribute(int Scale = 1) { Scale = Scale; }
-
-        public int Scale { get; }
     }
 }

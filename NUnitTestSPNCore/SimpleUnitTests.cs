@@ -81,6 +81,39 @@ namespace NUnitTestSPNCore
         }
     }
 
+    public class SimulationTests
+    {
+        [Test]
+        public static void PlotMarksInSystemOverTime()
+        {
+            var controller = Run<SimpleEmptyCheck>(100);
+            controller.Save();
+
+            var simulation = (SimpleEmptyCheck)controller.TopGroup;
+            var d = simulation.Descriptor.DebugGetMarksTree();
+            Assert.AreEqual(2, simulation.C.GetMarks().Count);
+
+            var restoredController = new SimulationController<SimpleEmptyCheck>(load:true);
+            var restoredSimulation = (SimpleEmptyCheck)restoredController.TopGroup;
+            Assert.AreEqual(2, restoredSimulation.C.GetMarks().Count);
+            Assert.AreNotEqual(restoredSimulation.C, simulation.C);
+
+            var firstStep = (SimpleEmptyCheck) restoredController.Frames.GetState(0);
+            Assert.AreEqual(2, firstStep.B.GetMarks().Count);
+
+
+        }
+
+        private static SimulationController<T> Run<T>(int steps)
+            where T : Group, new()
+        {
+            var simulation = new SimulationController<T>();
+            for (var i = 0; i < steps; i++) simulation.SimulationStep();
+
+            return simulation;
+        }
+    }
+
     public class UITests
     {
         [Test]

@@ -18,7 +18,11 @@ namespace ServicesPetriNet.Core
             try {
                 var state = File.ReadAllText(path);
                 f = JsonConvert.DeserializeObject<Frames>(state);
+                if (f == null) {
+                    throw new Exception("Unreadable file!");
+                }
             } catch (Exception e) {
+                f= new Frames();
                 var s = JsonConvert.SerializeObject(f, Formatting.None);
                 File.WriteAllText(_path, s);
             }
