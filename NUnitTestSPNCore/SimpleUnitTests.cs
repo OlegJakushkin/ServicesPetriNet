@@ -1,6 +1,4 @@
-using System.IO;
 using System.Linq;
-using Newtonsoft.Json;
 using NUnit.Framework;
 using ServicesPetriNet;
 using ServicesPetriNet.Core;
@@ -37,7 +35,7 @@ namespace NUnitTestSPNCore
         public void TestSummChainAtoF()
         {
             var simulation = Run<SimpleOutRefSummChainAtoF>(100);
-            var result =(SimpleOutRefSummChainAtoF.Mark)simulation.F.GetMarks().First() ;
+            var result = (SimpleOutRefSummChainAtoF.Mark) simulation.F.GetMarks().First();
             Assert.AreEqual(5 + 6 + 7 + 8, result.value);
         }
 
@@ -70,10 +68,29 @@ namespace NUnitTestSPNCore
         {
             var simulation = Run<SimpleEmptyCheck>(100);
             var d = simulation.Descriptor.DebugGetMarksTree();
-            var s = JsonConvert.SerializeObject(d, Formatting.Indented);
-            File.WriteAllText("C:/Users/Натали/Documents/GitHub/ServicesPetriNet/log.json", s);
             Assert.AreEqual(2, simulation.C.GetMarks().Count);
         }
+
+        private static T Run<T>(int steps)
+            where T : Group, new()
+        {
+            var simulation = new SimulationController<T>();
+            for (var i = 0; i < steps; i++) simulation.SimulationStep();
+
+            return (T) simulation.TopGroup;
+        }
+    }
+
+    public class UITests
+    {
+        [Test]
+        private static void PlotMarksInSystemOverTime() { }
+
+        [Test]
+        private static void PlotMarksInPlaceForTypeOverTime() { }
+
+        [Test]
+        private static void PlotMarksAtTimeMomentInMultiplePlaces() { }
 
         private static T Run<T>(int steps)
             where T : Group, new()

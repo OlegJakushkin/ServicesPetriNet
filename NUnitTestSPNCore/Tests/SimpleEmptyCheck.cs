@@ -7,9 +7,9 @@ namespace ServicesPetriNetCore.Core.Tests
     public class SimpleEmptyCheck : Group
     {
         public Place A, B, C;
+        public Transition MoveABC;
 
         public Transition MoveBA;
-        public Transition MoveABC;
 
         public SimpleEmptyCheck()
         {

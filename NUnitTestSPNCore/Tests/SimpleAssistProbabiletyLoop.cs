@@ -11,7 +11,7 @@ namespace ServicesPetriNetCore.Core.Tests
 
         public Transition AtoC, BtoC;
 
-        [Probabilety()]
+        [Probabilety]
         public Transition CtoA;
 
         [Probabilety(1, 0, 1, 0, 1, 0)]

@@ -8,40 +8,52 @@ namespace ServicesPetriNet.Core
 {
     public class SimulationController<TGroup> where TGroup : Group, new()
     {
+        public SimulationFrameController Frames;
+
         private int step;
 
         public Group TopGroup;
 
-        public SimulationController()
+        public SimulationController(bool load = false, string path = "./model.json")
         {
-            TopGroup = new TGroup();
-            TopGroup.SetGlobatTransitionTimeScales();
+            if (load) {
+                Frames = new SimulationFrameController(path);
+                TopGroup = Frames.GetState();
+            } else {
+                TopGroup = new TGroup();
+                TopGroup.SetGlobatTransitionTimeScales();
 
-            var fat = TopGroup.Descriptor.SubGroups.Values
-                .Traverse(g => g.Value.Descriptor.SubGroups.Values)
-                .SelectMany(g => g.Value.Descriptor.Transitions)
-                .Select(pair => pair.Value).ToList();
-            fat.AddRange(TopGroup.Descriptor.Transitions.Values);
+                var fat = TopGroup.Descriptor.SubGroups.Values
+                    .Traverse(g => g.Value.Descriptor.SubGroups.Values)
+                    .SelectMany(g => g.Value.Descriptor.Transitions)
+                    .Select(pair => pair.Value).ToList();
+                fat.AddRange(TopGroup.Descriptor.Transitions.Values);
 
-            Transitions = fat.OrderBy(
-                    x =>
-                    {
-                        if (x.Attributes.Any(a => a is PrioretyAttribute)) {
-                            var pa = (PrioretyAttribute) x.Attributes.First(a => a is PrioretyAttribute);
-                            return pa.Priorety;
+                Transitions = fat.OrderBy(
+                        x =>
+                        {
+                            if (x.Attributes.Any(a => a is PrioretyAttribute)) {
+                                var pa = (PrioretyAttribute) x.Attributes.First(a => a is PrioretyAttribute);
+                                return pa.Priorety;
+                            }
+
+                            return 0;
                         }
+                    )
+                    .ToList();
 
-                        return 0;
-                    }
-                )
-                .ToList();
+                if (Transitions
+                    .Any(descriptor => !descriptor.Value.CheckActionFunctions()))
+                    throw new Exception("Bad Action routing detected");
 
-            if (Transitions
-                .Any(descriptor => !descriptor.Value.CheckActionFunctions()))
-                throw new Exception("Bad Action routing detected");
+                Frames = new SimulationFrameController(path);
+                Frames.SaveState(TopGroup);
+            }
         }
 
         public List<FieldDescriptor<Transition>> Transitions { get; set; }
+
+        public void Save() { Frames.Save(); }
 
         public void SimulationStep()
         {
@@ -52,7 +64,7 @@ namespace ServicesPetriNet.Core
                 var time = step % t.TimeScale == 0;
                 var avail = t.Check();
                 //var which = t.DebugSource(TopGroup);
-                if (time  && avail) {
+                if (time && avail) {
                     if (transition.Attributes.Any(a => a is ProbabiletyAttribute) &&
                         transition.Attributes.First(a => a is ProbabiletyAttribute) is ProbabiletyAttribute pa) {
                         var pad = pa.Distribution as IRandomNumberGenerator<int>;
@@ -81,7 +93,7 @@ namespace ServicesPetriNet.Core
             }
 
             MarksController.Marks.RemoveAll(mark => mark.Host == null || mark.Host is Transition);
-
+            Frames.SaveState(TopGroup);
         }
 
         private class TransitionStage

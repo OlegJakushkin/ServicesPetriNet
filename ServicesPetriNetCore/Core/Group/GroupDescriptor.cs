@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
-using Dynamitey;
 using static ServicesPetriNet.Extensions;
 
 namespace ServicesPetriNet.Core
@@ -42,6 +41,26 @@ namespace ServicesPetriNet.Core
             foreach (var fieldDescriptor in SubGroups) action(fieldDescriptor.Value);
         }
 
+        public dynamic DebugGetMarksTree()
+        {
+            var result = new ExpandoObject();
+
+            Action<Group> a = null;
+
+            a = g =>
+            {
+                var p = g.Descriptor.Places;
+                foreach (var fieldDescriptor in p)
+                    result.TryAdd(g.GetType().Name + "." + fieldDescriptor.Key, fieldDescriptor.Value.Value.GetMarks());
+                g.Descriptor.ApplyToAllSubGroups(descriptor => a(descriptor.Value));
+            };
+
+            a(host);
+
+
+            return result;
+        }
+
         public static GroupDescriptor CreateInstance(Group instance) { return new GroupDescriptor(instance); }
 
         public static List<Type> GetAllMarkTypes(List<MarkType> marks, List<Transition> transitions)
@@ -49,27 +68,6 @@ namespace ServicesPetriNet.Core
             var result = marks.Select(m => m.GetType()).ToList();
             result.AddRange(transitions.SelectMany(t => t.Links.Select(link => link.What)));
             return result.Distinct().ToList();
-        }
-
-        public dynamic DebugGetMarksTree()
-        {
-            var result =new ExpandoObject();
-
-            Action<Group> a = null;
-                
-            a= g =>
-            {
-                var p = g.Descriptor.Places;
-                foreach (var fieldDescriptor in p) {
-                    result.TryAdd(g.GetType().Name + "." + fieldDescriptor.Key, fieldDescriptor.Value.Value.GetMarks());
-                }
-                g.Descriptor.ApplyToAllSubGroups(descriptor => a(descriptor.Value));
-            };
-
-            a(host);
-            
-
-            return result;
         }
     }
 }

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Xml;
 
 namespace ServicesPetriNet.Core
 {
@@ -38,24 +37,24 @@ namespace ServicesPetriNet.Core
             var pns = PatternNodes.Where(p => p.Value.GetType() == typeof(Transition)).ToList();
 
 
-             pns.ForEach(
+            pns.ForEach(
                 p =>
                 {
                     var key = p.Key + "_" + GetHashCode();
                     var t = GetType();
-                    var f = t.GetField(p.Key, BindingFlags.Public | BindingFlags.NonPublic |
-                                              BindingFlags.Instance);
+                    var f = t.GetField(
+                        p.Key,
+                        BindingFlags.Public | BindingFlags.NonPublic |
+                        BindingFlags.Instance
+                    );
                     var attrs = f.GetCustomAttributes(true).Cast<Attribute>().ToList();
                     var val = new FieldDescriptor<Transition> {
                         Value = (Transition) p.Value,
                         Attributes = attrs
                     };
-                    descriptor.Transitions.Add(key
-                        ,val
-
-                    );
+                    descriptor.Transitions.Add(key, val);
                 }
-             );
+            );
         }
     }
 }

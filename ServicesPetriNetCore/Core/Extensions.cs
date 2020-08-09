@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics.Tracing;
 using System.Linq;
 using System.Reflection;
 using Dynamitey;
@@ -164,10 +163,7 @@ namespace ServicesPetriNet
             return result;
         }
 
-        public static bool IsList(this Type o)
-        {
-            return o.FullName.StartsWith("System.Collections.Generic.List");
-        }
+        public static bool IsList(this Type o) { return o.FullName.StartsWith("System.Collections.Generic.List"); }
 
         //Zero check action type arguments
         public static bool CheckActionFunctions(this Transition t)
@@ -215,13 +211,13 @@ namespace ServicesPetriNet
             {
                 var isT = g.Descriptor.Transitions.Any(pair => pair.Value.Value == o);
                 if (isT) {
-                    result =  g.GetType().Name + "." + g.Descriptor.Transitions.First(pair => pair.Value.Value == o).Key;
+                    result = g.GetType().Name + "." + g.Descriptor.Transitions.First(pair => pair.Value.Value == o).Key;
                 } else {
                     var isP = g.Descriptor.Places.Any(pair => pair.Value.Value == o);
-                    if (isP) {
-                        result =  g.GetType().Name + "." + g.Descriptor.Places.First(pair => pair.Value.Value == o).Key;
-                    }
+                    if (isP)
+                        result = g.GetType().Name + "." + g.Descriptor.Places.First(pair => pair.Value.Value == o).Key;
                 }
+
                 g.Descriptor.ApplyToAllSubGroups(descriptor => a(descriptor.Value));
             };
             a(g);
@@ -340,25 +336,30 @@ namespace ServicesPetriNet
                             Name = "",
                             Type = param.ParameterType
                         };
-                         var value = dict.TryGetValue(key, out var pValue)
+                        var value = dict.TryGetValue(key, out var pValue)
                             ? pValue
                             : throw new InvalidOperationException(
                                 $"Parameter of type {param.ParameterType.Name} was not found"
                             );
-                         var elementType = param.ParameterType.GenericTypeArguments.First();
+                        var elementType = param.ParameterType.GenericTypeArguments.First();
 
 
+                        var castMethod = typeof(Enumerable).GetMethod(
+                            "Cast",
+                            BindingFlags.Static | BindingFlags.Public
+                        );
+                        var castGenericMethod = castMethod.MakeGenericMethod(elementType);
+                        var toListMethod = typeof(Enumerable).GetMethod(
+                            "ToList",
+                            BindingFlags.Static | BindingFlags.Public
+                        );
+                        var toListGenericMethod = toListMethod.MakeGenericMethod(elementType);
 
-                         var castMethod = typeof(Enumerable).GetMethod("Cast", BindingFlags.Static | BindingFlags.Public);
-                         var castGenericMethod = castMethod.MakeGenericMethod(new Type[] { elementType });
-                         var toListMethod = typeof(Enumerable).GetMethod("ToList", BindingFlags.Static | BindingFlags.Public);
-                         var toListGenericMethod = toListMethod.MakeGenericMethod(new Type[] { elementType });
-
-                        var eo = castGenericMethod.Invoke(null, new object[] { value });
-                        var lo = toListGenericMethod.Invoke(null, new object[] {eo});
+                        var eo = castGenericMethod.Invoke(null, new object[] {value});
+                        var lo = toListGenericMethod.Invoke(null, new[] {eo});
                         //var values = value.Select(x => Dynamic.InvokeConvert(x, elementType, true)).ToList();
-                         ps[index] = lo;
-                     dict.Remove(key);
+                        ps[index] = lo;
+                        dict.Remove(key);
                     } else {
                         var listType = typeof(List<>);
                         var constructedListType = listType.MakeGenericType(param.ParameterType);
@@ -463,7 +464,7 @@ namespace ServicesPetriNet
         {
             CheckNulls(t, from);
 
-            t.Links.Add(new Link<T>(@from, t, byName, howMany, count));
+            t.Links.Add(new Link<T>(from, t, byName, howMany, count));
             return t;
         }
 
