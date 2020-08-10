@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
+using Newtonsoft.Json;
 using static ServicesPetriNet.Extensions;
 
 namespace ServicesPetriNet.Core
@@ -19,11 +20,17 @@ namespace ServicesPetriNet.Core
             Refresh();
         }
 
+        [JsonIgnore]
         public Dictionary<string, FieldDescriptor<Place>> Places { get; set; }
+        [JsonIgnore]
         public Dictionary<string, FieldDescriptor<Transition>> Transitions { get; set; }
+        [JsonIgnore]
         public Dictionary<string, FieldDescriptor<Group>> SubGroups { get; set; }
+        [JsonIgnore]
         public List<Type> MarkTypes { get; set; }
+        [JsonIgnore]
         public List<MarkType> Marks { get; set; }
+        [JsonIgnore]
         public List<Pattern> Patterns { get; set; }
 
         public void Refresh()
@@ -43,6 +50,7 @@ namespace ServicesPetriNet.Core
 
         public dynamic DebugGetMarksTree()
         {
+            Refresh();
             var result = new ExpandoObject();
 
             Action<Group> a = null;

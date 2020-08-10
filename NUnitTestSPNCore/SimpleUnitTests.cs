@@ -1,3 +1,4 @@
+using System.IO;
 using System.Linq;
 using NUnit.Framework;
 using ServicesPetriNet;
@@ -77,41 +78,55 @@ namespace NUnitTestSPNCore
             var simulation = new SimulationController<T>();
             for (var i = 0; i < steps; i++) simulation.SimulationStep();
 
-            return (T) simulation.TopGroup;
+            return simulation.state.TopGroup;
         }
     }
 
+    [TestFixture]
     public class SimulationTests
     {
-        [Test]
-        public static void PlotMarksInSystemOverTime()
-        {
-            var controller = Run<SimpleEmptyCheck>(100);
-            controller.Save();
+        string path = "./sim.json";
 
-            var simulation = (SimpleEmptyCheck)controller.TopGroup;
+        private SimulationController<SimpleEmptyCheck> Controller;
+        [SetUp]
+        public void init()
+        {
+            Controller = new SimulationController<SimpleEmptyCheck>(false, path);
+            for (var i = 0; i < 100; i++) Controller.SimulationStep();
+            Controller.Save();
+
+            var simulation = Controller.state.TopGroup;
             var d = simulation.Descriptor.DebugGetMarksTree();
             Assert.AreEqual(2, simulation.C.GetMarks().Count);
-
-            var restoredController = new SimulationController<SimpleEmptyCheck>(load:true);
-            var restoredSimulation = (SimpleEmptyCheck)restoredController.TopGroup;
-            Assert.AreEqual(2, restoredSimulation.C.GetMarks().Count);
-            Assert.AreNotEqual(restoredSimulation.C, simulation.C);
-
-            var firstStep = (SimpleEmptyCheck) restoredController.Frames.GetState(0);
-            Assert.AreEqual(2, firstStep.B.GetMarks().Count);
-
-
         }
 
-        private static SimulationController<T> Run<T>(int steps)
-            where T : Group, new()
+        [Test]
+        public void TestLatestState()
         {
-            var simulation = new SimulationController<T>();
-            for (var i = 0; i < steps; i++) simulation.SimulationStep();
-
-            return simulation;
+            var rtg = Controller.Frames.GetState();
+            var sss = rtg.TopGroup.Descriptor.DebugGetMarksTree();
+            Assert.AreEqual(2, rtg.TopGroup.C.GetMarks().Count);
         }
+
+        [Test]
+        public void TestRestoredController()
+        {
+            var restoredController = new SimulationController<SimpleEmptyCheck>(true, path);
+            var restoredSimulation = restoredController.state.TopGroup;
+            var m = MarksController.Marks;
+            var s = restoredSimulation.Descriptor.DebugGetMarksTree();
+            Assert.AreEqual(2, restoredSimulation.C.GetMarks().Count);
+            Assert.AreNotEqual(restoredSimulation.C, Controller.state.TopGroup.C);
+        }
+
+        [Test]
+        public void TestPastState()
+        {
+            var restoredController = new SimulationController<SimpleEmptyCheck>(true, path);
+            var firstStep = restoredController.Frames.GetState(0);
+            Assert.AreEqual(2, firstStep.TopGroup.B.GetMarks().Count);
+        }
+
     }
 
     public class UITests
@@ -125,13 +140,13 @@ namespace NUnitTestSPNCore
         [Test]
         private static void PlotMarksAtTimeMomentInMultiplePlaces() { }
 
-        private static T Run<T>(int steps)
+        private static SimulationController<T> Run<T>(int steps)
             where T : Group, new()
         {
             var simulation = new SimulationController<T>();
             for (var i = 0; i < steps; i++) simulation.SimulationStep();
 
-            return (T) simulation.TopGroup;
+            return simulation;
         }
     }
 }

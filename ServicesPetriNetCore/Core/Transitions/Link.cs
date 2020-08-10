@@ -15,10 +15,8 @@ namespace ServicesPetriNet
             None
         }
 
-        [JsonIgnore]
         public INode From;
 
-        [JsonIgnore]
         public INode To;
 
         public Link(INode from, INode to, Type what, string byName = "", Count howMany = Count.One, int count = -1)

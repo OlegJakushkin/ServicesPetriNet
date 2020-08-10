@@ -6,29 +6,34 @@ using Newtonsoft.Json;
 
 namespace ServicesPetriNet.Core
 {
-    public class SimulationFrameController
+    public class SimulationFrameController<T>
     {
         private readonly string _path;
 
         public Frames f;
-
-        public SimulationFrameController(string path)
+        public JsonSerializerSettings  JsonSettings = new JsonSerializerSettings()
+        {
+            TypeNameAssemblyFormatHandling = TypeNameAssemblyFormatHandling.Full,
+            TypeNameHandling = TypeNameHandling.Objects,
+            ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
+            PreserveReferencesHandling = PreserveReferencesHandling.All
+        };
+        public SimulationFrameController(string path, bool preserve = true)
         {
             _path = path;
-            try {
+            if(preserve) {
                 var state = File.ReadAllText(path);
                 f = JsonConvert.DeserializeObject<Frames>(state);
                 if (f == null) {
                     throw new Exception("Unreadable file!");
                 }
-            } catch (Exception e) {
+            } else {
                 f= new Frames();
-                var s = JsonConvert.SerializeObject(f, Formatting.None);
-                File.WriteAllText(_path, s);
+                Save();
             }
         }
 
-        public Group GetState(int frame = -1)
+        public T GetState(int frame = -1)
         {
             var dmp = DiffMatchPatchModule.Default;
             var txt = f.diffs[0];
@@ -41,12 +46,12 @@ namespace ServicesPetriNet.Core
                 }
             else txt = f.LastState;
 
-            return JsonConvert.DeserializeObject<Group>(txt);
+            return JsonConvert.DeserializeObject<T>(txt, JsonSettings);
         }
 
-        public void SaveState(Group TopGroup)
+        public void SaveState(T TopGroup)
         {
-            var ng = JsonConvert.SerializeObject(TopGroup, Formatting.None);
+            var ng = JsonConvert.SerializeObject(TopGroup, Formatting.None, JsonSettings);
 
             if (f.frames == 0) {
                 f.diffs.Add(ng);
@@ -62,23 +67,23 @@ namespace ServicesPetriNet.Core
             f.frames += 1;
         }
 
-        public void IterateOverFrames(Action<Group> act, int tillFrame = -1)
+        public void IterateOverFrames(Action<T> act, int tillFrame = -1)
         {
             var dmp = DiffMatchPatchModule.Default;
             var txt = f.diffs[0];
-            act(JsonConvert.DeserializeObject<Group>(txt));
+            act(JsonConvert.DeserializeObject<T>(txt, JsonSettings));
 
             var latest = tillFrame == -1 ? f.frames : tillFrame;
             for (var i = 1; i < latest; i++) {
                 var dstDelta = dmp.DiffFromDelta(txt, f.diffs[f.frames]);
                 txt = dmp.DiffText2(dstDelta);
-                act(JsonConvert.DeserializeObject<Group>(txt));
+                act(JsonConvert.DeserializeObject<T>(txt, JsonSettings));
             }
         }
 
         public void Save()
         {
-            var s = JsonConvert.SerializeObject(f, Formatting.None);
+            var s = JsonConvert.SerializeObject(f, Formatting.None, JsonSettings);
             File.WriteAllText(_path, s);
         }
 
