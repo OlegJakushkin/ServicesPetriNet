@@ -13,19 +13,44 @@ namespace ServicesPetriNet.Core
             : base(load, path, () => new TGroup()) { }
     }
 
+    public enum SimulationStrategy
+    {
+        None,
+        Plane, // 70% of run time is spent on serialization
+        Diffs, // 50% of run time is spent on diff creation
+    }
     public class SimulationControllerBase<TGroup> where TGroup : Group
     {
         private readonly Dictionary<Place, List<Action<List<MarkType>>>> _eventListners =
             new Dictionary<Place, List<Action<List<MarkType>>>>();
 
-        public SimulationFrameController<State> Frames;
+        public IFrameController<State> Frames;
 
         public State state = new State();
 
-        public SimulationControllerBase(bool load = false, string path = "./model.json", Func<TGroup> generator = null)
+        public SimulationControllerBase(bool load = false, string path = "./model.json", Func<TGroup> generator = null, SimulationStrategy strategy =SimulationStrategy.Plane)
         {
             if (load) {
-                Frames = new SimulationFrameController<State>(path);
+                switch (strategy) {
+                    case SimulationStrategy.None:
+                    {
+                        Frames = new SimulationNoMemoryFrameController<State>();
+                        break;
+                    }
+                    case SimulationStrategy.Plane:
+                    {
+                        Frames = new SimulationPlaneFrameController<State>(path);
+                        break;
+                    }
+                    case SimulationStrategy.Diffs:
+                    {
+                        Frames = new SimulationDiffFrameController<State>(path);
+                        break;
+                    }
+                    default: throw new ArgumentOutOfRangeException(nameof(strategy), strategy, null);
+                }
+
+
                 state = Frames.GetState();
             } else {
                 if (generator != null) state.TopGroup = generator();
@@ -57,7 +82,27 @@ namespace ServicesPetriNet.Core
                     .Any(descriptor => !descriptor.Value.CheckActionFunctions()))
                     throw new Exception("Bad Action routing detected");
 
-                Frames = new SimulationFrameController<State>(path, false);
+                switch (strategy) {
+                    case SimulationStrategy.None:
+                    {
+                        Frames = new SimulationNoMemoryFrameController<State>();
+
+                        break;
+                    }
+                    case SimulationStrategy.Plane:
+                    {
+                        Frames = new SimulationPlaneFrameController<State>(path, false);
+
+                        break;
+                    }
+                    case SimulationStrategy.Diffs:
+                    {
+                        Frames = new SimulationDiffFrameController<State>(path, false);
+                        break;
+                    }
+                    default: throw new ArgumentOutOfRangeException(nameof(strategy), strategy, null);
+                }
+
                 Frames.SaveState(state);
             }
         }
