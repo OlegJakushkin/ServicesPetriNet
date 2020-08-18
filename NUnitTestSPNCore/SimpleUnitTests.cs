@@ -1,4 +1,3 @@
-using System.IO;
 using System.Linq;
 using NUnit.Framework;
 using ServicesPetriNet;
@@ -79,74 +78,6 @@ namespace NUnitTestSPNCore
             for (var i = 0; i < steps; i++) simulation.SimulationStep();
 
             return simulation.state.TopGroup;
-        }
-    }
-
-    [TestFixture]
-    public class SimulationTests
-    {
-        string path = "./sim.json";
-
-        private SimulationController<SimpleEmptyCheck> Controller;
-        [SetUp]
-        public void init()
-        {
-            Controller = new SimulationController<SimpleEmptyCheck>(false, path);
-            for (var i = 0; i < 100; i++) Controller.SimulationStep();
-            Controller.Save();
-
-            var simulation = Controller.state.TopGroup;
-            var d = simulation.Descriptor.DebugGetMarksTree();
-            Assert.AreEqual(2, simulation.C.GetMarks().Count);
-        }
-
-        [Test]
-        public void TestLatestState()
-        {
-            var rtg = Controller.Frames.GetState();
-            var sss = rtg.TopGroup.Descriptor.DebugGetMarksTree();
-            Assert.AreEqual(2, rtg.TopGroup.C.GetMarks().Count);
-        }
-
-        [Test]
-        public void TestRestoredController()
-        {
-            var restoredController = new SimulationController<SimpleEmptyCheck>(true, path);
-            var restoredSimulation = restoredController.state.TopGroup;
-            var m = MarksController.Marks;
-            var s = restoredSimulation.Descriptor.DebugGetMarksTree();
-            Assert.AreEqual(2, restoredSimulation.C.GetMarks().Count);
-            Assert.AreNotEqual(restoredSimulation.C, Controller.state.TopGroup.C);
-        }
-
-        [Test]
-        public void TestPastState()
-        {
-            var restoredController = new SimulationController<SimpleEmptyCheck>(true, path);
-            var firstStep = restoredController.Frames.GetState(0);
-            Assert.AreEqual(2, firstStep.TopGroup.B.GetMarks().Count);
-        }
-
-    }
-
-    public class UITests
-    {
-        [Test]
-        private static void PlotMarksInSystemOverTime() { }
-
-        [Test]
-        private static void PlotMarksInPlaceForTypeOverTime() { }
-
-        [Test]
-        private static void PlotMarksAtTimeMomentInMultiplePlaces() { }
-
-        private static SimulationController<T> Run<T>(int steps)
-            where T : Group, new()
-        {
-            var simulation = new SimulationController<T>();
-            for (var i = 0; i < steps; i++) simulation.SimulationStep();
-
-            return simulation;
         }
     }
 }

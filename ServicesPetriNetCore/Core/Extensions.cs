@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Dynamitey;
+using Fractions;
 using ServicesPetriNet.Core;
 
 namespace ServicesPetriNet
@@ -24,6 +25,50 @@ namespace ServicesPetriNet
 
 
         public static List<MarkType> GetMarks(this Place p) { return MarksController.GetPlaceMarks(p); }
+
+        public static Fraction GreatestCommonDivisor(this IEnumerable<Fraction> numbers)
+        {
+            return numbers.Aggregate(GreatestCommonDivisor);
+        }
+
+        public static Fraction GreatestCommonDivisor(Fraction a, Fraction b)
+        {
+            //Calculate the Greatest Common Divisor of a and b.
+            //Unless b == 0, the result will have the same sign as b(so that when
+            //b is divided by it, the result comes out positive).
+
+            while (b != 0) {
+                var ta = new Fraction(b.Numerator, b.Denominator);
+                b = a % b;
+                a = ta;
+            }
+
+            return a;
+        }
+
+        public static object ReflectionCast<T>(this IEnumerable<T> value, Type elementType)
+        {
+            var castMethod = typeof(Enumerable).GetMethod(
+                "Cast",
+                BindingFlags.Static | BindingFlags.Public
+            );
+            var castGenericMethod = castMethod.MakeGenericMethod(elementType);
+            var toListMethod = typeof(Enumerable).GetMethod(
+                "ToList",
+                BindingFlags.Static | BindingFlags.Public
+            );
+            var toListGenericMethod = toListMethod.MakeGenericMethod(elementType);
+
+            var eo = castGenericMethod.Invoke(null, new object[] {value});
+            var lo = toListGenericMethod.Invoke(null, new[] {eo});
+            return lo;
+        }
+
+        public static List<E> ReflectionCast<T, E>(this IEnumerable<T> value)
+        {
+            var elementType = typeof(E);
+            return (List<E>) value.ReflectionCast(elementType);
+        }
 
         #region GDI
 
@@ -62,18 +107,25 @@ namespace ServicesPetriNet
 
             foreach (var Fi in Thost
                 .GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-                .Where(fi => t.IsAssignableFrom(fi.FieldType)).ToList()) {
-                var l = (List<Tbase>) Fi.GetValue(instance);
-                var iterator = 0;
-                l.ForEach(
-                    i => allFields.Add(
-                        Fi.Name + "_" + iterator++,
-                        new FieldDescriptor<Tbase> {
-                            Value = i,
-                            Attributes = Fi.GetCustomAttributes(typeof(Attribute), true).Cast<Attribute>().ToList()
-                        }
-                    )
-                );
+                .Where(fi => fi.FieldType.IsList()).ToList()) {
+                var tp = Fi.FieldType.GenericTypeArguments.First();
+                if (tp == typeof(Tbase)) {
+                    var it = Fi.GetValue(instance);
+
+                    var l = (List<Tbase>) Fi.GetValue(instance);
+                    var iterator = 0;
+                    if (l != null)
+                        l.ForEach(
+                            i => allFields.Add(
+                                Fi.Name + "_" + iterator++,
+                                new FieldDescriptor<Tbase> {
+                                    Value = i,
+                                    Attributes =
+                                        Fi.GetCustomAttributes(typeof(Attribute), true).Cast<Attribute>().ToList()
+                                }
+                            )
+                        );
+                }
             }
 
             return allFields;
@@ -92,6 +144,36 @@ namespace ServicesPetriNet
                     var it = (TChild) Fi.GetValue(instance);
                     if (it == null) Fi.SetValue(instance, (TChild) Activator.CreateInstance(Fi.FieldType));
                 }
+        }
+
+        public static List<INode> InitListOfNodes(object host, string name, in int count)
+        {
+            if (host == null)
+                throw new Exception("Empty host");
+            var result = new List<INode>();
+
+            var Thost = host.GetType();
+            var Fi = Thost
+                .GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                .First(fi => fi.Name == name);
+            if (Fi.FieldType != typeof(Type) &&
+                Fi.FieldType.IsList()) {
+                var it = Fi.GetValue(host);
+                var tp = Fi.FieldType.GenericTypeArguments.First();
+
+                if (it == null) {
+                    for (var i = 0; i < count; ++i) {
+                        var o = (INode) Activator.CreateInstance(tp);
+                        result.Add(o);
+                    }
+
+                    Fi.SetValue(host, result.ReflectionCast(tp));
+                }
+            } else {
+                throw new Exception("Field not found");
+            }
+
+            return result;
         }
 
         public static INode InitSingleNode(object host, string name)
@@ -343,20 +425,7 @@ namespace ServicesPetriNet
                             );
                         var elementType = param.ParameterType.GenericTypeArguments.First();
 
-
-                        var castMethod = typeof(Enumerable).GetMethod(
-                            "Cast",
-                            BindingFlags.Static | BindingFlags.Public
-                        );
-                        var castGenericMethod = castMethod.MakeGenericMethod(elementType);
-                        var toListMethod = typeof(Enumerable).GetMethod(
-                            "ToList",
-                            BindingFlags.Static | BindingFlags.Public
-                        );
-                        var toListGenericMethod = toListMethod.MakeGenericMethod(elementType);
-
-                        var eo = castGenericMethod.Invoke(null, new object[] {value});
-                        var lo = toListGenericMethod.Invoke(null, new[] {eo});
+                        var lo = value.ReflectionCast(elementType);
                         //var values = value.Select(x => Dynamic.InvokeConvert(x, elementType, true)).ToList();
                         ps[index] = lo;
                         dict.Remove(key);
@@ -413,10 +482,13 @@ namespace ServicesPetriNet
             return outs;
         }
 
+
         //Fourth move to outputs
         //Todo test multiple outs of same type
-        public static void Distribute(this Transition t, Dictionary<Type, List<MarkType>> outs)
+        public static Dictionary<Place, List<MarkType>> Distribute(this Transition t,
+            Dictionary<Type, List<MarkType>> outs)
         {
+            var result = new Dictionary<Place, List<MarkType>>();
             t.Links.Where(l => l.To.GetType() == typeof(Place)).ToList().ForEach(
                 l =>
                 {
@@ -424,19 +496,35 @@ namespace ServicesPetriNet
                     if (outs.TryGetValue(l.What, out var value) &&
                         value != null) marks = value;
                     else throw new Exception("Transitions Action had to return Tout: " + l.What);
+                    var key = (Place) l.To;
 
                     switch (l.CountStrategy) {
                         case Link.Count.One:
                         {
                             var m = marks.First();
-                            m.Host = l.To;
+                            m.Host = key;
                             var ms = MarksController.Marks;
                             marks.Remove(m);
+
+                            if (result.TryGetValue(key, out var added)) {
+                                added.Add(m);
+                            } else {
+                                added = new List<MarkType> {
+                                    m
+                                };
+                                result.Add(key, added);
+                            }
+
                             break;
                         }
                         case Link.Count.All:
                         {
-                            marks.MoveMarksTo(l.To);
+                            marks.MoveMarksTo(key);
+
+                            if (result.TryGetValue(key, out var added)) added.AddRange(marks);
+                            else result.Add(key, marks);
+
+
                             marks.Clear();
 
                             break;
@@ -445,6 +533,9 @@ namespace ServicesPetriNet
                         {
                             var ms = marks.Take(l.CountStrategyAmmount).ToList();
                             ms.MoveMarksTo(l.To);
+
+                            if (result.TryGetValue(key, out var added)) added.AddRange(marks);
+                            else result.Add(key, marks);
                             marks.RemoveAll(m => ms.Contains(m));
                             break;
                         }
@@ -456,6 +547,8 @@ namespace ServicesPetriNet
                     }
                 }
             );
+
+            return result;
         }
 
         public static Transition In<T>(this Transition t, Place from, Link.Count howMany = Link.Count.One,

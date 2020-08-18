@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Fractions;
 using ServicesPetriNet.Core.Attributes;
 using static ServicesPetriNet.Extensions;
 
@@ -22,18 +23,23 @@ namespace ServicesPetriNet.Core
 
         public IGroupDescriptor Descriptor { get; set; }
 
-        public int TimeScale { get; set; } = 1;
+        public Fraction TimeScale { get; set; } = 1;
 
         public List<MarkType> Marks { get => Descriptor.Marks; set => Descriptor.Refresh(); }
 
         public List<Pattern> Patterns { get => Descriptor.Patterns; set => Descriptor.Refresh(); }
 
-        public void SetGlobatTransitionTimeScales()
+        //Returns Fraction - minimal frame time span
+        public Fraction SetGlobatTransitionTimeScales()
         {
+            var timeScales = new List<Fraction>();
             Action<Group> g = gr =>
             {
-                foreach (var keyValuePair in gr.Descriptor.Transitions)
-                    keyValuePair.Value.Value.TimeScale = gr.TimeScale;
+                timeScales.Add(gr.TimeScale);
+                foreach (var keyValuePair in gr.Descriptor.Transitions) {
+                    keyValuePair.Value.Value.TimeScale *= gr.TimeScale;
+                    timeScales.Add(keyValuePair.Value.Value.TimeScale);
+                }
             };
 
             Action<FieldDescriptor<Group>> a = null;
@@ -44,6 +50,8 @@ namespace ServicesPetriNet.Core
             };
 
             g(this);
+
+            return timeScales.GreatestCommonDivisor();
         }
 
 

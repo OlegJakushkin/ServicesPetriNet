@@ -15,10 +15,17 @@ namespace ServicesPetriNet.Core
             Extensions.InitAllTypeInstances<Transition>(this);
         }
 
-        protected void Register(string name)
+        protected void RegisterNode(string name)
         {
             var p = Extensions.InitSingleNode(this, name);
             PatternNodes.Add(new KeyValuePair<string, INode>(name, p));
+        }
+
+        protected void RegisterList(string name, int count)
+        {
+            var p = Extensions.InitListOfNodes(this, name, count);
+            for (var i = 0; i < count; i++)
+                PatternNodes.Add(new KeyValuePair<string, INode>(name + "[" + i + "]", p[i]));
         }
 
         public virtual void RefreshHostDescriptor(IGroupDescriptor descriptor)

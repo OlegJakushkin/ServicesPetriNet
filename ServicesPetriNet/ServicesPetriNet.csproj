@@ -4,11 +4,13 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <StartupObject>ServicesPetriNet.Program</StartupObject>
+    <AssemblyName>8</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Accord.Statistics" Version="3.8.0" />
     <PackageReference Include="Dynamitey" Version="2.0.10.189" />
+    <PackageReference Include="Fractions" Version="4.0.1" />
     <PackageReference Include="JetBrains.Annotations" Version="2020.1.0" />
     <PackageReference Include="JonSkeet.MiscUtil" Version="0.2.0" />
     <PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="3.6.0">

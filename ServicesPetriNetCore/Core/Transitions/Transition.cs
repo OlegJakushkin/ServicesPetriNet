@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Fractions;
 
 namespace ServicesPetriNet.Core
 {
@@ -14,6 +15,6 @@ namespace ServicesPetriNet.Core
     {
         public Type Action;
         public List<Link> Links = new List<Link>();
-        public int TimeScale = 1;
+        public Fraction TimeScale = 1;
     }
 }

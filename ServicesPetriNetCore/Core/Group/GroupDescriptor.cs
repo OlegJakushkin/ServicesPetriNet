@@ -22,14 +22,19 @@ namespace ServicesPetriNet.Core
 
         [JsonIgnore]
         public Dictionary<string, FieldDescriptor<Place>> Places { get; set; }
+
         [JsonIgnore]
         public Dictionary<string, FieldDescriptor<Transition>> Transitions { get; set; }
+
         [JsonIgnore]
         public Dictionary<string, FieldDescriptor<Group>> SubGroups { get; set; }
+
         [JsonIgnore]
         public List<Type> MarkTypes { get; set; }
+
         [JsonIgnore]
         public List<MarkType> Marks { get; set; }
+
         [JsonIgnore]
         public List<Pattern> Patterns { get; set; }
 

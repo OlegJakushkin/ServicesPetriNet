@@ -11,24 +11,23 @@ namespace ServicesPetriNet.Core
         private readonly string _path;
 
         public Frames f;
-        public JsonSerializerSettings  JsonSettings = new JsonSerializerSettings()
-        {
+
+        public JsonSerializerSettings JsonSettings = new JsonSerializerSettings {
             TypeNameAssemblyFormatHandling = TypeNameAssemblyFormatHandling.Full,
             TypeNameHandling = TypeNameHandling.Objects,
             ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
             PreserveReferencesHandling = PreserveReferencesHandling.All
         };
+
         public SimulationFrameController(string path, bool preserve = true)
         {
             _path = path;
-            if(preserve) {
+            if (preserve) {
                 var state = File.ReadAllText(path);
                 f = JsonConvert.DeserializeObject<Frames>(state);
-                if (f == null) {
-                    throw new Exception("Unreadable file!");
-                }
+                if (f == null) throw new Exception("Unreadable file!");
             } else {
-                f= new Frames();
+                f = new Frames();
                 Save();
             }
         }
