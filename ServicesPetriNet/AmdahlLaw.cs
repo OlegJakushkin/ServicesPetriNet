@@ -14,8 +14,8 @@ namespace ServicesPetriNet
         public Place DoneTasks;
 
         public Place LinearTasks;
-
         public Transition LinearWorker;
+
         public Place ParallelTasks;
         public List<Transition> ParallelWorkers;
 

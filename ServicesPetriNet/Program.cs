@@ -35,11 +35,12 @@ namespace ServicesPetriNet
             var plotData = testSet.ToDictionary(fraction => fraction, fraction => new List<PlotFrame>());
 
             testSet.ForEach(
-                pp =>
+                parallelPart =>
                 {
-                    for (var i = minProcessors; i < maxProcessors; i *= 2) {
+                    for (Fraction i = minProcessors; i < maxProcessors;) {
+                        var processors = i.ToInt32();
                         var simulation = new SimulationControllerBase<AmdahlLaw>(
-                            generator: () => new AmdahlLaw(20, i, pp),
+                            generator: () => new AmdahlLaw(20, processors, parallelPart),
                             strategy: SimulationStrategy.None
                         );
                         var stop = false;
@@ -50,36 +51,49 @@ namespace ServicesPetriNet
                         while (!stop) simulation.SimulationStep();
 
                         Console.WriteLine(
-                            $"processors: {i} steps: {(simulation.state.CurrentTime / simulation.state.TimeStep).ToDouble()} time: {simulation.state.CurrentTime.ToDouble()} timeStep {simulation.state.TimeStep}"
+                            $"processors: {processors} steps: {(simulation.state.CurrentTime / simulation.state.TimeStep).ToDouble()} time: {simulation.state.CurrentTime.ToDouble()} timeStep {simulation.state.TimeStep}"
                         );
-                        plotData[pp].Add(new PlotFrame(i, simulation.state.CurrentTime.ToDouble()) );
+                        plotData[parallelPart].Add(new PlotFrame(processors, simulation.state.CurrentTime.ToDouble()) );
+                        i += 1;
+                        i *= Fraction.FromDoubleRounded(1.1);
                     }
                 }
             );
+
+            var i = 0;
+            double[] xPositions = plotData.Values.First().Select(frame => Convert.ToDouble(++i)).ToArray();
+            string[] xLabels = plotData.Values.First().Select(frame => frame.Key.ToString()).ToArray();
+
             var plt = new ScottPlot.Plot(600, 400);
             foreach (var kvp in plotData) {
-                plt.PlotScatter(kvp.Value.Select(frame => frame.Key).ToArray(), kvp.Value.Select(frame => frame.Value).ToArray(), label: kvp.Key.ToString());
+
+                var ys = kvp.Value.Select(frame => frame.Value).ToArray();
+                //var esi = new ScottPlot.Statistics.Interpolation.EndSlopeSpline(xPositions, ys, resolution: 2);
+                //plt.PlotScatter(esi.interpolatedXs, esi.interpolatedYs, label: kvp.Key.ToString(), markerSize:0);
+                plt.PlotScatter(xPositions, ys, label: kvp.Key.ToString(), markerSize:0);
             }
+            plt.XTicks(xPositions, xLabels);
             plt.Legend();
-            plt.Ticks(logScaleY: true);
+            plt.Ticks(useExponentialNotation: true);
             plt.Title("Amdahl's law");
             plt.YLabel("Time");
             plt.XLabel("Number of processors");
             plt.SaveFig("AmdahlTime.png");
 
             var plt2 = new ScottPlot.Plot(600, 400);
-            foreach (var kvp in plotData)
-            {
-                plt2.PlotScatter(kvp.Value.Select(frame => frame.Key).ToArray(), kvp.Value.Select(frame => kvp.Value[0].Value /frame.Value ).ToArray(), label: kvp.Key.ToString());
+            foreach (var kvp in plotData) {
+                var ys = kvp.Value.Select(frame => kvp.Value[0].Value / frame.Value).ToArray();
+                //var esi = new ScottPlot.Statistics.Interpolation.EndSlopeSpline(xPositions, ys, resolution: 2);
+                //plt2.PlotScatter(esi.interpolatedXs, esi.interpolatedYs, label: kvp.Key.ToString(), markerSize: 0);
+                plt2.PlotScatter(xPositions, ys, label: kvp.Key.ToString(), markerSize: 0);
             }
+            plt2.XTicks(xPositions, xLabels);
             plt2.Legend();
-            plt2.Ticks(logScaleY: true);
             plt2.Title("Amdahl's law");
             plt2.YLabel("SpeedUp");
             plt2.XLabel("Number of processors");
             plt2.SaveFig("AmdahlSpeedUp.png");
 
-            Console.ReadLine();
         }
     }
 }
