@@ -79,9 +79,12 @@ namespace ServicesPetriNet
                 var ys = kvp.Value.Select(frame => frame.Value).ToArray();
                 var esi = new ScottPlot.Statistics.Interpolation.EndSlopeSpline(xPositions, ys, resolution: 15);
                 plt.PlotScatter(esi.interpolatedXs, esi.interpolatedYs,  markerSize:0, label: null);
-                plt.PlotScatter(xPositions, ys, label: kvp.Key.ToString(), markerSize: 10, lineWidth: 0);
+                plt.PlotScatter(xPositions, ys, label: kvp.Key.ToString(), markerSize: 5, lineWidth: 0);
             }
-            plt.XTicks(xprintPositions, xLabels);
+            plt.XTicks(xPositions, xLabels);
+            plt.PlotHLine(20, lineStyle: LineStyle.Dash);
+            plt.PlotHLine(1, lineStyle: LineStyle.Dash);
+
             plt.Legend();
             plt.Title("Amdahl's law");
             plt.YLabel("Time");
@@ -97,6 +100,7 @@ namespace ServicesPetriNet
                 plt2.PlotScatter(xPositions, ys, label: kvp.Key.ToString(), markerSize: 5, lineWidth: 0);
 
             }
+            plt2.PlotHLine(1, lineStyle: LineStyle.Dash);
             plt2.PlotHLine(20, lineStyle: LineStyle.Dash);
             plt2.Legend();
             plt2.XTicks(xPositions, xLabels);
