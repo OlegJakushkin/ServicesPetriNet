@@ -27,15 +27,15 @@ namespace ServicesPetriNet
             var minProcessors = 1;
             var maxProcessors = 1025;
             var testSet = new List<Fraction>() {
-               // Fraction.FromDoubleRounded(0.5),
-               // Fraction.FromDoubleRounded(0.75),
-               // Fraction.FromDoubleRounded(0.9),
+                Fraction.FromDoubleRounded(0.5),
+                Fraction.FromDoubleRounded(0.75),
+                Fraction.FromDoubleRounded(0.9),
                 Fraction.FromDoubleRounded(0.95),
             };
 
             var bugTest = new List<Fraction>() {
-                8,
-                9
+                //9,
+                10
             };
             var plotData = testSet.ToDictionary(fraction => fraction, fraction => new List<PlotFrame>());
 
@@ -43,9 +43,9 @@ namespace ServicesPetriNet
                 parallelPart =>
                 {
                     for (Fraction i = minProcessors; i < maxProcessors;) {
-                    //bugTest.ForEach( 
+                   // bugTest.ForEach( 
                     //       i =>
-                    //    {
+                     //   {
                             var processors = i.ToInt32();
                             var simulation = new SimulationControllerBase<AmdahlLaw>(
                                 generator: () => new AmdahlLaw(40, processors, parallelPart),
@@ -57,18 +57,18 @@ namespace ServicesPetriNet
                                 list => { stop = true; }
                             );
 
-                            Fraction calls = 0;
-                            simulation.TopGroup.ParallelBalancedWorkers.ForEach(
-                                t =>
-                                {
-                                    simulation.OnAfterTransitionFired(t, ()=>calls+=1);
-                                } );
+                           // Fraction calls = 0;
+                           // simulation.TopGroup.ParallelBalancedWorkers.ForEach(
+                           //     t =>
+                           //     {
+                           //         simulation.OnAfterTransitionFired(t, ()=>calls+=1);
+                            //    } );
 
                             
                             while (!stop) {
                                 simulation.SimulationStep();
                                // Console.WriteLine(simulation.state.TopGroup.DoneChecker.TimeScale + " || " + simulation.state.CurrentTime + " : " + simulation.Frame + " called PT times: " + calls + " tasks done: " + simulation.TopGroup.DoneTasks.GetMarks().Count);
-                                //calls = 0;
+                               // calls = 0;
                             }
 
                             Console.WriteLine(
@@ -77,13 +77,13 @@ namespace ServicesPetriNet
                             plotData[parallelPart].Add(
                                 new PlotFrame(processors, simulation.state.CurrentTime.ToDouble())
                             );
-                           var oi = i.ToInt32();
-                           i *= Fraction.FromDouble(1.05);
-                           if (oi == i.ToInt32()) {
-                               i += 1;
-                           }
+                           //var oi = i.ToInt32();
+                           i *= 2;//Fraction.FromDouble(1.05);
+                           //if (oi == i.ToInt32()) {
+                           //    i += 1;
+                           //}
                     }
-                    //);
+                   // );
                 }
             );
 

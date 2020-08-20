@@ -68,7 +68,9 @@ namespace ServicesPetriNet
             }
 
             // Fire squize tasks when balanced and linear tasks are done
-            var squizeTimeScale = new Fraction(squizeTasks, processors) + LinearWorker.TimeScale * linearTasks + ParallelBalancedWorkers.First().TimeScale * parallelBalancedTasks;
+            var squizeTimeScale = new Fraction(squizeTasks, processors)
+                                  + LinearWorker.TimeScale * linearTasks
+                                  + ParallelBalancedWorkers.First().TimeScale * (parallelBalancedTasks/processors);
 
             for (var i = 0; i < processors; i++)
             {
@@ -81,10 +83,7 @@ namespace ServicesPetriNet
                     .In<Mark>(SquizeParallelTasks)
                     .Out<Mark>(DoneTasks);
 
-                if (parallelTasks < processors)
-                {
                     cw.TimeScale = squizeTimeScale;
-                }
             }
             Descriptor.Refresh();
             var s = Descriptor.DebugGetMarksTree();

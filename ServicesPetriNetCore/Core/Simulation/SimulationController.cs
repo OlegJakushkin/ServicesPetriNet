@@ -167,14 +167,15 @@ namespace ServicesPetriNet.Core
         {
             state.CurrentTime += state.TimeStep;
             var readyToAct = new List<TransitionStage>();
+            //Check availabilety
             foreach (var transition in Transitions) {
                 var t = transition.Value;
                 var mod = state.CurrentTime % t.TimeScale;
                 var time = mod == 0;
-                //if(time && t.Check() && "AmdahlLaw.DoneChecker" != t.DebugSource(TopGroup) && transition.Value.TimeScale == new Fraction(19, 27)) {
-                //    //var w = t.DebugSource(TopGroup);
-                //    var b = 222;
-                //}
+                if(time && t.Check() && state.CurrentTime == 2 && "AmdahlLaw.DoneChecker" != t.DebugSource(TopGroup) ) {
+                    var w = t.DebugSource(TopGroup);
+                    var b = 222;
+                }
                 if (time) {
                     var avail = t.Check();
                     
@@ -195,7 +196,6 @@ namespace ServicesPetriNet.Core
                         readyToAct.Add(
                             new TransitionStage {
                                 Transition = t,
-                                Marks = t.Gather()
                             }
                         );
                     }
@@ -207,7 +207,21 @@ namespace ServicesPetriNet.Core
                     foreach (var listener in listeners)
                         listener();
             //Debug section end
-             
+
+            //Grab marks
+            List<TransitionStage> ToRemove = new List<TransitionStage>();
+            foreach (var kvp in readyToAct) {
+                if (kvp.Transition.Check()) {
+                    kvp.Marks = kvp.Transition.Gather();
+                } else {
+                    ToRemove.Add(kvp);
+                }
+            }
+            foreach (var transitionStage in ToRemove) {
+                readyToAct.Remove(transitionStage);
+            }
+
+            //Act
             foreach (var transition in readyToAct) {
                 var t = transition.Transition;
                 var ts = t.DebugSource(state.TopGroup);
