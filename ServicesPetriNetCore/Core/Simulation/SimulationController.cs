@@ -23,10 +23,17 @@ namespace ServicesPetriNet.Core
     {
         private readonly Dictionary<Place, List<Action<List<MarkType>>>> _eventListners =
             new Dictionary<Place, List<Action<List<MarkType>>>>();
+        private readonly Dictionary<Transition, List<Action>> _activationListners =
+            new Dictionary<Transition, List<Action>>();
+        private readonly Dictionary<Transition, List<Action>> _completeListners =
+            new Dictionary<Transition, List<Action>>();
 
         public IFrameController<State> Frames;
 
         public State state = new State();
+        public TGroup TopGroup => state.TopGroup;
+        public int Frame => (state.CurrentTime/state.TimeStep).ToInt32();
+
 
         public SimulationControllerBase(bool load = false, string path = "./model.json", Func<TGroup> generator = null, SimulationStrategy strategy =SimulationStrategy.Plane)
         {
@@ -109,7 +116,7 @@ namespace ServicesPetriNet.Core
 
         public List<FieldDescriptor<Transition>> Transitions { get; set; }
 
-        public void OnUpdate(Place key, Action<List<MarkType>> action)
+        public void OnPlaceUpdate(Place key, Action<List<MarkType>> action)
         {
             List<Action<List<MarkType>>> listners = null;
             if (_eventListners.TryGetValue(key, out listners)) {
@@ -122,6 +129,38 @@ namespace ServicesPetriNet.Core
             }
         }
 
+        public void OnBeforeTransitionFired(Transition key, Action action)
+        {
+            List<Action> listners = null;
+            if (_activationListners.TryGetValue(key, out listners))
+            {
+                listners.Add(action);
+            }
+            else
+            {
+                listners = new List<Action> {
+                    action
+                };
+                _activationListners.Add(key, listners);
+            }
+        }
+
+        public void OnAfterTransitionFired(Transition key, Action action)
+        {
+            List<Action> listners = null;
+            if (_activationListners.TryGetValue(key, out listners))
+            {
+                listners.Add(action);
+            }
+            else
+            {
+                listners = new List<Action> {
+                    action
+                };
+                _activationListners.Add(key, listners);
+            }
+        }
+
         public void Save() { Frames.Save(); }
 
         public void SimulationStep()
@@ -130,10 +169,15 @@ namespace ServicesPetriNet.Core
             var readyToAct = new List<TransitionStage>();
             foreach (var transition in Transitions) {
                 var t = transition.Value;
-                var time = state.CurrentTime % t.TimeScale == 0;
+                var mod = state.CurrentTime % t.TimeScale;
+                var time = mod == 0;
+                //if(time && t.Check() && "AmdahlLaw.DoneChecker" != t.DebugSource(TopGroup) && transition.Value.TimeScale == new Fraction(19, 27)) {
+                //    //var w = t.DebugSource(TopGroup);
+                //    var b = 222;
+                //}
                 if (time) {
                     var avail = t.Check();
-                    //var which = t.DebugSource(TopGroup);
+                    
                     if (avail) {
                         if (transition.Attributes.Any(a => a is ProbabiletyAttribute) &&
                             transition.Attributes.First(a => a is ProbabiletyAttribute) is ProbabiletyAttribute pa) {
@@ -157,16 +201,31 @@ namespace ServicesPetriNet.Core
                     }
                 }
             }
-
+            //Debug section start
+            foreach (var kvp in readyToAct)
+                if (_activationListners.TryGetValue(kvp.Transition, out var listeners))
+                    foreach (var listener in listeners)
+                        listener();
+            //Debug section end
+             
             foreach (var transition in readyToAct) {
                 var t = transition.Transition;
                 var ts = t.DebugSource(state.TopGroup);
                 var results = t.Act(transition.Marks);
                 var added = t.Distribute(results);
+
+                //Debug section start
+                foreach (var kvp in readyToAct)
+                    if (_completeListners.TryGetValue(kvp.Transition, out var listeners))
+                        foreach (var listener in listeners)
+                            listener();
+
                 foreach (var kvp in added)
                     if (_eventListners.TryGetValue(kvp.Key, out var listeners))
                         foreach (var listener in listeners)
                             listener(kvp.Value);
+                //Debug section end
+
             }
 
             MarksController.Marks.RemoveAll(mark => mark.Host == null || mark.Host is Transition);
