@@ -23,7 +23,6 @@ namespace ServicesPetriNet
         }
         private static void Main(string[] args)
         {
-
             var minProcessors = 1;
             var maxProcessors = 1025;
             var testSet = new List<Fraction>() {
@@ -33,22 +32,15 @@ namespace ServicesPetriNet
                 Fraction.FromDoubleRounded(0.95),
             };
 
-            var bugTest = new List<Fraction>() {
-                //9,
-                10
-            };
             var plotData = testSet.ToDictionary(fraction => fraction, fraction => new List<PlotFrame>());
 
             testSet.ForEach(
                 parallelPart =>
                 {
-                    for (Fraction i = minProcessors; i < maxProcessors;) {
-                   // bugTest.ForEach( 
-                    //       i =>
-                     //   {
+                    for (Fraction i = minProcessors; i < maxProcessors; i*=2) {
                             var processors = i.ToInt32();
                             var simulation = new SimulationControllerBase<AmdahlLaw>(
-                                generator: () => new AmdahlLaw(40, processors, parallelPart),
+                                generator: () => new AmdahlLaw(20, processors, parallelPart),
                                 strategy: SimulationStrategy.None
                             );
                             var stop = false;
@@ -57,33 +49,17 @@ namespace ServicesPetriNet
                                 list => { stop = true; }
                             );
 
-                           // Fraction calls = 0;
-                           // simulation.TopGroup.ParallelBalancedWorkers.ForEach(
-                           //     t =>
-                           //     {
-                           //         simulation.OnAfterTransitionFired(t, ()=>calls+=1);
-                            //    } );
-
-                            
                             while (!stop) {
                                 simulation.SimulationStep();
-                               // Console.WriteLine(simulation.state.TopGroup.DoneChecker.TimeScale + " || " + simulation.state.CurrentTime + " : " + simulation.Frame + " called PT times: " + calls + " tasks done: " + simulation.TopGroup.DoneTasks.GetMarks().Count);
-                               // calls = 0;
                             }
 
                             Console.WriteLine(
                                 $"processors: {processors} steps: {((simulation.state.CurrentTime - simulation.TopGroup.DoneChecker.TimeScale) / simulation.state.TimeStep).ToDouble()} time: {simulation.state.CurrentTime.ToDouble()} timeStep {simulation.state.TimeStep}"
                             );
                             plotData[parallelPart].Add(
-                                new PlotFrame(processors, simulation.state.CurrentTime.ToDouble())
+                                new PlotFrame(processors, (simulation.state.CurrentTime - simulation.TopGroup.DoneChecker.TimeScale).ToDouble())
                             );
-                           //var oi = i.ToInt32();
-                           i *= 2;//Fraction.FromDouble(1.05);
-                           //if (oi == i.ToInt32()) {
-                           //    i += 1;
-                           //}
                     }
-                   // );
                 }
             );
 
@@ -102,7 +78,7 @@ namespace ServicesPetriNet
 
                 var ys = kvp.Value.Select(frame => frame.Value).ToArray();
                 var esi = new ScottPlot.Statistics.Interpolation.EndSlopeSpline(xPositions, ys, resolution: 15);
-                plt.PlotScatter(esi.interpolatedXs, esi.interpolatedYs, label: kvp.Key.ToString(), markerSize:0);
+                plt.PlotScatter(esi.interpolatedXs, esi.interpolatedYs,  markerSize:0, label: null);
                 plt.PlotScatter(xPositions, ys, label: kvp.Key.ToString(), markerSize: 10, lineWidth: 0);
             }
             plt.XTicks(xprintPositions, xLabels);
@@ -113,14 +89,17 @@ namespace ServicesPetriNet
             plt.SaveFig("AmdahlTime.png");
 
             var plt2 = new ScottPlot.Plot(600, 400);
+
             foreach (var kvp in plotData) {
                 var ys = kvp.Value.Select(frame => kvp.Value[0].Value / frame.Value).ToArray();
                 var esi = new ScottPlot.Statistics.Interpolation.EndSlopeSpline(xPositions, ys, resolution: 15);
-                plt2.PlotScatter(esi.interpolatedXs, esi.interpolatedYs, label: kvp.Key.ToString(), markerSize: 0);
-                plt2.PlotScatter(xPositions, ys, label: kvp.Key.ToString(), markerSize: 10, lineWidth: 0);
+                plt2.PlotScatter(esi.interpolatedXs, esi.interpolatedYs,  markerSize: 0, label: null);
+                plt2.PlotScatter(xPositions, ys, label: kvp.Key.ToString(), markerSize: 5, lineWidth: 0);
+
             }
-            plt2.XTicks(xPositions, xLabels);
+            plt2.PlotHLine(20, lineStyle: LineStyle.Dash);
             plt2.Legend();
+            plt2.XTicks(xPositions, xLabels);
             plt2.Title("Amdahl's law");
             plt2.YLabel("SpeedUp");
             plt2.XLabel("Number of processors");
