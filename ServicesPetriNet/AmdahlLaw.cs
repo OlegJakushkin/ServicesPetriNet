@@ -86,7 +86,6 @@ namespace ServicesPetriNet
                     cw.TimeScale = squizeTimeScale;
             }
             Descriptor.Refresh();
-            var s = Descriptor.DebugGetMarksTree();
         }
     }
 }
