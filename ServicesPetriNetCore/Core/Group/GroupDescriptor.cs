@@ -9,14 +9,16 @@ namespace ServicesPetriNet.Core
 {
     public class GroupDescriptor : IGroupDescriptor
     {
-        private readonly Group host;
+
+        [JsonIgnore]
+        public Group Host { get; set; }
 
         private GroupDescriptor(Group instance)
         {
             Marks = new List<MarkType>();
             MarkTypes = new List<Type>();
             Patterns = new List<Pattern>();
-            host = instance;
+            Host = instance;
             Refresh();
         }
 
@@ -40,9 +42,9 @@ namespace ServicesPetriNet.Core
 
         public void Refresh()
         {
-            Places = GetAllPlaces(host);
-            Transitions = GetAllTransitions(host);
-            SubGroups = GetAllGroups(host);
+            Places = GetAllPlaces(Host);
+            Transitions = GetAllTransitions(Host);
+            SubGroups = GetAllGroups(Host);
             Marks = Places.SelectMany(p => p.Value.Value.GetMarks()).ToList();
             MarkTypes = GetAllMarkTypes(Marks, Transitions.Values.Select(descriptor => descriptor.Value).ToList());
             Patterns.ForEach(p => p.RefreshHostDescriptor(this));
@@ -68,7 +70,7 @@ namespace ServicesPetriNet.Core
                 g.Descriptor.ApplyToAllSubGroups(descriptor => a(descriptor.Value));
             };
 
-            a(host);
+            a(Host);
 
 
             return result;

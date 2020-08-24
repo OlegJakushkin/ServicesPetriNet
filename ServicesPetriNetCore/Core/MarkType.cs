@@ -12,9 +12,9 @@ namespace ServicesPetriNet
         {
             public static List<MarkType> Marks = new List<MarkType>();
 
-            public static List<MarkType> GetPlaceMarks(Place p) { return Marks.Where(t => t.Host.Equals(p)).ToList(); }
+            public static List<MarkType> GetPlaceMarks(Place p) { return Marks.Where(t => t.Host != null && t.Host.Equals(p)).ToList(); }
 
-            //ToDo: toexpansion
+
         }
 
         public class MarkType : IMarkType
@@ -28,22 +28,22 @@ namespace ServicesPetriNet
 
             public INode Host { get; set; }
 
-            public bool HasParent => Parent != null;
-            public IMarkType Parent { get; set; }
-            public bool Decomposed { get; set; }
 
-            public bool Decompose(List<IPart> into)
+
+            public bool Decompose(List<IPart> into, Group At)
             {
                 if (Decomposed) return false;
 
                 var counter = 0;
                 foreach (var e in into) {
-                    e.Data.Parent = this;
+                    e.Parent = this;
                     e.Number = counter++;
                     e.From = into.Count;
                 }
 
                 Parts.AddRange(into);
+                Host = At.DecomposedMarks;
+
                 Decomposed = true;
                 return true;
             }
@@ -72,7 +72,6 @@ namespace ServicesPetriNet
                 return (false, null);
             }
 
-            public List<IPart> Parts { get; }
 
             public static MarkType Create<T>(params object[] fields)
             {
@@ -96,6 +95,17 @@ namespace ServicesPetriNet
                 var result = (MarkType) o;
                 return result;
             }
+
+            //As Parts Holder
+            public bool Decomposed { get; set; }
+            public List<IPart> Parts { get; }
+
+            //As IPart
+            public bool HasParent => Parent != null;
+            public IMarkType Parent { get; set; }
+            public bool IsPart => HasParent;
+            public int Number { get; set; }
+            public int From { get; set; }
         }
     }
 }

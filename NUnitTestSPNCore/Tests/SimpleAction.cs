@@ -26,7 +26,7 @@ namespace ServicesPetriNetCore.Core.Tests
             public int value;
         }
 
-        public class Add
+        public class Add : ActionBase
         {
             [UsedImplicitly]
             public static Mark Action(Mark fromA, Mark fromB)

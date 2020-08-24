@@ -9,7 +9,9 @@ using ServicesPetriNet.Core;
 
 namespace ServicesPetriNet
 {
-    public static class Extensions
+
+
+     public static class Extensions
     {
         public static IEnumerable<T> Traverse<T>(this IEnumerable<T> items,
             Func<T, IEnumerable<T>> childSelector)
@@ -163,7 +165,7 @@ namespace ServicesPetriNet
 
                 if (it == null) {
                     for (var i = 0; i < count; ++i) {
-                        var o = (INode) Activator.CreateInstance(tp);
+                        var o = CreateNode(host, tp);
                         result.Add(o);
                     }
 
@@ -174,6 +176,26 @@ namespace ServicesPetriNet
             }
 
             return result;
+        }
+
+        private static INode CreateNode(object host, Type tp)
+        {
+            var o = (INode) Activator.CreateInstance(tp);
+            var ts = host.GetType();
+            if (typeof(Group).IsAssignableFrom(ts)) {
+                o.From = (Group) host;
+            } else if (typeof(IGroupDescriptor).IsAssignableFrom(ts)) {
+                o.From = ((IGroupDescriptor) host).Host;
+            }
+            else if (typeof(Pattern).IsAssignableFrom(ts))
+            {
+                o.From = ((Pattern)host).Host;
+            }
+            else {
+                throw new Exception("Shall be called from Group, Pattern or Desctiptor!");
+            }
+
+            return o;
         }
 
         public static INode InitSingleNode(object host, string name)
@@ -188,7 +210,7 @@ namespace ServicesPetriNet
             if (Fi.FieldType != typeof(Type)) {
                 var it = Fi.GetValue(host);
                 if (it == null) {
-                    var o = (INode) Activator.CreateInstance(Fi.FieldType);
+                    var o = CreateNode(host, Fi.FieldType);
                     Fi.SetValue(host, o);
                     return o;
                 }
@@ -204,7 +226,13 @@ namespace ServicesPetriNet
 
         #region Transition
 
-        public static Transition Action<T>(this Transition t)
+        public static bool Decompose(this Group At, IMarkType whom, List<IPart> into )
+        {
+            var result = whom.Decompose(@into, At);
+            return result;
+        }
+
+        public static Transition Action<T>(this Transition t) where T : IAction
         {
             t.Action = typeof(T);
 
@@ -251,6 +279,8 @@ namespace ServicesPetriNet
         public static bool CheckActionFunctions(this Transition t)
         {
             var actor = Dynamic.InvokeConstructor(t.Action);
+            var action = (IAction) actor;
+            action.Host = t;
 
             var method = t.Action.GetMethod(nameof(Action));
 
@@ -373,6 +403,8 @@ namespace ServicesPetriNet
         public static Dictionary<Type, List<MarkType>> Act(this Transition t, Dictionary<LinkKey, List<MarkType>> dict)
         {
             var actor = Dynamic.InvokeConstructor(t.Action);
+            var action = (IAction)actor;
+            action.Host = t;
 
             var method = t.Action.GetMethod(nameof(Action));
 
@@ -598,6 +630,11 @@ namespace ServicesPetriNet
         public static void MoveMarksTo(this IEnumerable<MarkType> marks, INode p)
         {
             marks.ToList().ForEach(m => m.Host = p);
+        }
+
+        public static List<IPart> AsParts<T>(this IEnumerable<T> list) where T : IMarkType
+        {
+            return list.Cast<IPart>().ToList();
         }
 
         #endregion Marks

@@ -2,7 +2,7 @@
 
 namespace ServicesPetriNet.Core.Transitions
 {
-    public class GenerateOne<Tout>
+    public class GenerateOne<Tout> : ActionBase
         where Tout : MarkType, new()
     {
         [UsedImplicitly]

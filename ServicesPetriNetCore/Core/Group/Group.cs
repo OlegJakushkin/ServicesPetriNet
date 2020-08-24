@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Fractions;
+using Newtonsoft.Json;
 using ServicesPetriNet.Core.Attributes;
 using static ServicesPetriNet.Extensions;
 
@@ -12,6 +13,7 @@ namespace ServicesPetriNet.Core
     //If places or transitions need to be added they shall be created mnually
     public class Group
     {
+        public Place DecomposedMarks;
         public Group()
         {
             InitAllTypeInstances<Place>(this);
@@ -21,13 +23,20 @@ namespace ServicesPetriNet.Core
             SetTimeScales();
         }
 
+        [JsonIgnore]
         public IGroupDescriptor Descriptor { get; set; }
 
         public Fraction TimeScale { get; set; } = 1;
-
+        [JsonIgnore]
         public List<MarkType> Marks { get => Descriptor.Marks; set => Descriptor.Refresh(); }
-
+        [JsonIgnore]
         public List<Pattern> Patterns { get => Descriptor.Patterns; set => Descriptor.Refresh(); }
+
+        public void RegisterPattern(Pattern p)
+        {
+            Patterns.Add(p);
+            p.PatternPatterns.ForEach(pp=> RegisterPattern(p));
+        }
 
         //Returns Fraction - minimal frame time span
         public Fraction SetGlobatTransitionTimeScales()

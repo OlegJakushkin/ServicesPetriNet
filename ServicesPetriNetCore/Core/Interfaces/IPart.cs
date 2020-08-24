@@ -2,8 +2,10 @@
 {
     public interface IPart
     {
+        bool IsPart { get; }
         int Number { get; set; }
         int From { get; set; }
-        IMarkType Data { get; }
+        public IMarkType Parent { get; set; }
+
     }
 }

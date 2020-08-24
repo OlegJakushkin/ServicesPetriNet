@@ -8,17 +8,20 @@ namespace ServicesPetriNet.Core
     public class Pattern
     {
         private readonly List<KeyValuePair<string, INode>> PatternNodes = new List<KeyValuePair<string, INode>>();
-
-        public Pattern()
-        {
-            Extensions.InitAllTypeInstances<Place>(this);
-            Extensions.InitAllTypeInstances<Transition>(this);
-        }
+        public readonly List<Pattern> PatternPatterns = new List<Pattern>();
+        public Pattern(Group hostCtx) { Host = hostCtx; }
+        
+        public Group Host { get; set; }
 
         protected void RegisterNode(string name)
         {
             var p = Extensions.InitSingleNode(this, name);
             PatternNodes.Add(new KeyValuePair<string, INode>(name, p));
+        }
+
+        protected void RegisterPattern(Pattern p)
+        {
+            PatternPatterns.Add(p);
         }
 
         protected void RegisterList(string name, int count)

@@ -13,8 +13,8 @@ namespace ServicesPetriNetCore.Core.Tests
 
         public SimplePattern()
         {
-            var aggregator = new AggregateAllPattern<Mark>(new[] {A, B}, C);
-            Patterns.Add(aggregator);
+            var aggregator = new AggregateAllPattern<Mark>(this, new[] {A, B}, C);
+            RegisterPattern(aggregator);
             Marks = Extensions.At(A, MarkType.Create<Mark>(123)).At(B, MarkType.Create<Mark>(321));
         }
 
@@ -38,7 +38,7 @@ namespace ServicesPetriNetCore.Core.Tests
 
             private Transition reduction;
 
-            public AggregateAllPattern(ICollection<Place> inputs, Place output)
+            public AggregateAllPattern(Group ctx, ICollection<Place> inputs, Place output) : base(ctx)
             {
                 Inputs = inputs.ToList();
                 Output = output;
@@ -48,7 +48,7 @@ namespace ServicesPetriNetCore.Core.Tests
                 Inputs.ForEach(place => reduction.In<Mark>(place, Link.Count.All));
             }
 
-            private class Act
+            private class Act : ActionBase
             {
                 [UsedImplicitly]
                 public TMark Action(List<TMark> inputs)

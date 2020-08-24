@@ -30,7 +30,7 @@ namespace ServicesPetriNetCore.Core.Tests
             public int value;
         }
 
-        public class Add
+        public class Add : ActionBase
         {
             [UsedImplicitly]
             public Mark Action(List<Mark> marks)

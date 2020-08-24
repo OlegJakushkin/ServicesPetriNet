@@ -3,14 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using Accord.Math.Random;
 using Fractions;
+using Newtonsoft.Json;
 using ServicesPetriNet.Core.Attributes;
 
 namespace ServicesPetriNet.Core
 {
     public class SimulationController<TGroup> : SimulationControllerBase<TGroup> where TGroup : Group, new()
     {
-        public SimulationController(bool load = false, string path = "./model.json")
-            : base(load, path, () => new TGroup()) { }
+        public SimulationController(bool load = false, string path = "./model.json", SimulationStrategy strategy = SimulationStrategy.Plane)
+            : base(load, path, () => new TGroup(), SimulationStrategy.Plane) { }
     }
 
     public enum SimulationStrategy
@@ -28,7 +29,7 @@ namespace ServicesPetriNet.Core
         private readonly Dictionary<Transition, List<Action>> _completeListners =
             new Dictionary<Transition, List<Action>>();
 
-        public IFrameController<State> Frames;
+        private IFrameController<State> Frames;
 
         public State state = new State();
         public TGroup TopGroup => state.TopGroup;
@@ -58,7 +59,7 @@ namespace ServicesPetriNet.Core
                 }
 
 
-                state = Frames.GetState();
+                state = Load();
             } else {
                 if (generator != null) state.TopGroup = generator();
                 else throw new Exception("Bad generator");
@@ -163,6 +164,12 @@ namespace ServicesPetriNet.Core
 
         public void Save() { Frames.Save(); }
 
+        public State Load(int frame =-1)
+        {
+            var s = Frames.GetState(frame);
+            s.CleanUpMarks();
+            return s;
+        }
         public void SimulationStep()
         {
             state.CurrentTime += state.TimeStep;
@@ -254,11 +261,28 @@ namespace ServicesPetriNet.Core
             public Fraction TimeStep;
             public TGroup TopGroup;
 
+            
             public void RefreshMarks()
             {
                 var ms = TopGroup.Descriptor.DebugGetMarksTree();
                 Marks = new List<MarkType>();
                 foreach (KeyValuePair<string, object> kvp in ms) Marks.AddRange((List<MarkType>) kvp.Value);
+            }
+
+            public void CleanUpMarks()
+            {
+                var ms = TopGroup.Descriptor.DebugGetMarksTree();
+
+                foreach (KeyValuePair<string, object> kvp in ms) {
+                    var l = (List<MarkType>) kvp.Value;
+                    l.ForEach(
+                        type =>
+                        {
+                            if (!Marks.Contains(type)) {
+                                type.Host = null;
+                            }
+                        });
+                }
             }
         }
 

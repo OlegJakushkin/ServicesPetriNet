@@ -3,12 +3,6 @@ using System.Collections.Generic;
 
 namespace ServicesPetriNet.Core
 {
-    public class FieldDescriptor<T>
-    {
-        public List<Attribute> Attributes = new List<Attribute>();
-        public T Value;
-    }
-
     public interface IGroupDescriptor
     {
         Dictionary<string, FieldDescriptor<Place>> Places { get; set; }
@@ -19,6 +13,8 @@ namespace ServicesPetriNet.Core
 
         List<Type> MarkTypes { get; set; }
         List<MarkType> Marks { get; set; }
+
+        Group Host { get; set; }
         void Refresh();
 
         void ApplyToAllSubGroups(Action<FieldDescriptor<Group>> action);

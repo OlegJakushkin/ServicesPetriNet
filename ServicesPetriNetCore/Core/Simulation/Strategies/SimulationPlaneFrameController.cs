@@ -14,7 +14,7 @@ namespace ServicesPetriNet.Core
             TypeNameAssemblyFormatHandling = TypeNameAssemblyFormatHandling.Full,
             TypeNameHandling = TypeNameHandling.Objects,
             ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
-            PreserveReferencesHandling = PreserveReferencesHandling.All
+            PreserveReferencesHandling = PreserveReferencesHandling.All,
         };
 
         public SimulationPlaneFrameController(string path, bool preserve = true)
@@ -24,6 +24,7 @@ namespace ServicesPetriNet.Core
                 var state = File.ReadAllText(path);
                 f = JsonConvert.DeserializeObject<Frames>(state);
                 if (f == null) throw new Exception("Unreadable file!");
+
             } else {
                 f = new Frames();
                 Save();

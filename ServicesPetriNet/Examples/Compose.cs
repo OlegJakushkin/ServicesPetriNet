@@ -5,7 +5,7 @@ using ServicesPetriNet.Core;
 
 namespace ServicesPetriNet.Examples
 {
-    public class Compose
+    public class Compose : ActionBase
     {
         [UsedImplicitly]
         public Message Action(List<SimpleNetwork.Package> ps)

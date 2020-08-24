@@ -2,7 +2,7 @@
 
 namespace ServicesPetriNet.Core.Transitions
 {
-    public class OneToOne<Tin, Tout>
+    public class OneToOne<Tin, Tout> : ActionBase
         where Tin : MarkType
         where Tout : MarkType, new()
     {

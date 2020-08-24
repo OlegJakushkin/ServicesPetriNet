@@ -13,7 +13,7 @@ namespace ServicesPetriNet
         {
             //Model test configurations
             var minProcessors = 1;
-            var maxProcessors = 120;
+            var maxProcessors = 121;
             var seialFraction = new List<Fraction>() {
                 Fraction.FromDoubleRounded(0.1),
                 Fraction.FromDoubleRounded(0.2),

@@ -4,7 +4,7 @@ using JetBrains.Annotations;
 
 namespace ServicesPetriNet.Examples
 {
-    public class Decompose
+    public class Decompose : ActionBase
     {
         [UsedImplicitly]
         public List<SimpleNetwork.Package> Action(Message m)

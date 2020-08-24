@@ -1,4 +1,10 @@
-﻿namespace ServicesPetriNet.Core
+﻿using Newtonsoft.Json;
+
+namespace ServicesPetriNet.Core
 {
-    public interface INode { }
+    public interface INode
+    {
+        [JsonIgnore]
+        Group From { get; set; }
+    }
 }

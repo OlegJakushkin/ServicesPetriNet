@@ -26,7 +26,7 @@ namespace ServicesPetriNetCore.Core.Tests
             public int value;
         }
 
-        public class BminusA
+        public class BminusA : ActionBase
         {
             [UsedImplicitly]
             public Mark Action(Mark B, Mark A)
