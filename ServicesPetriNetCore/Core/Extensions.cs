@@ -323,11 +323,11 @@ namespace ServicesPetriNet
             {
                 var isT = g.Descriptor.Transitions.Any(pair => pair.Value.Value == o);
                 if (isT) {
-                    result = g.GetType().Name + "." + g.Descriptor.Transitions.First(pair => pair.Value.Value == o).Key;
+                    result = g.GetType().Name + "_" + g.Descriptor.Transitions.First(pair => pair.Value.Value == o).Key;
                 } else {
                     var isP = g.Descriptor.Places.Any(pair => pair.Value.Value == o);
                     if (isP)
-                        result = g.GetType().Name + "." + g.Descriptor.Places.First(pair => pair.Value.Value == o).Key;
+                        result = g.GetType().Name + "_" + g.Descriptor.Places.First(pair => pair.Value.Value == o).Key;
                 }
 
                 g.Descriptor.ApplyToAllSubGroups(descriptor => a(descriptor.Value));

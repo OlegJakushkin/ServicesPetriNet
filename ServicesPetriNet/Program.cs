@@ -6,8 +6,9 @@ namespace ServicesPetriNet
     {
         private static void Main(string[] args)
         {
-            GustafsonLawDemoProgram.Main();
+            //GustafsonLawDemoProgram.Main();
             //AmdahlLawDemoProgram.Main();
+            FatTreeDemoProgram.Main();
         }
     }
 }

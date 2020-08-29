@@ -14,26 +14,40 @@ namespace ServicesPetriNet
     }
     public class NetworkChannel : Pattern
     {
-        private Place Channel;
+        private Place ChannelS, ChannelR;
         public Place NetworkFrom, NetworkTo;
 
-        private Transition Send, Receive;
+        private Transition SendT, SendR, ReceiveT, ReceiveR;
 
-        public NetworkChannel(Group ctx) : base(ctx)
+        public NetworkChannel(Group ctx, Place networkFrom, Place networkTo) : base(ctx)
         {
-            RegisterNode(nameof(Send));
-            RegisterNode(nameof(Receive));
-            RegisterNode(nameof(Channel));
-            Send.Action<OneToOne<Package>>()
+            NetworkFrom = networkFrom;
+            NetworkTo = networkTo;
+
+            RegisterNode(nameof(SendT));
+            RegisterNode(nameof(SendR));
+            RegisterNode(nameof(ReceiveT));
+            RegisterNode(nameof(ReceiveR));
+            RegisterNode(nameof(ChannelS));
+            RegisterNode(nameof(ChannelR));
+
+            SendT.Action<OneToOne<Package>>()
                 .In<Package>(NetworkFrom)
-                .Out<Package>(Channel);
-            Receive.Action<OneToOne<Package>>()
-                .In<Package>(Channel)
+                .Out<Package>(ChannelS);
+            SendR.Action<OneToOne<Package>>()
+                .In<Package>(ChannelS)
                 .Out<Package>(NetworkTo);
+
+            ReceiveT.Action<OneToOne<Package>>()
+                .In<Package>(NetworkTo)
+                .Out<Package>(ChannelR);
+            ReceiveR.Action<OneToOne<Package>>()
+                .In<Package>(ChannelR)
+                .Out<Package>(NetworkFrom);
         }
     }
 
-    public class Converter<T> : IAction
+    public class Converter<T> : ActionBase
         where T : MarkType, new()
     {
         public Type From => typeof(T);
@@ -59,23 +73,83 @@ namespace ServicesPetriNet
         private List<Transition> ToPackageTransitions;
 
         private List<Place> Routers;
-        private List<NetworkChannel> Links;
+        private List<NetworkChannel> Links = new List<NetworkChannel>();
 
         public Dictionary<string, Place> Endpoints;
         public List<Type> ToPackageConverters;
 
-        public FatTree(Group ctx, Dictionary<string, Place> endpoints, Fraction convertersSpeed, int Kport = 4, params Type[] toPackageConverters) : base(ctx)
+        public FatTree(Group ctx, Dictionary<string, Place> endpoints, Fraction convertersSpeed, int Kport = 6 , params Type[] toPackageConverters) : base(ctx)
         {
+            
             int C = Kport / 2;
-            int serversCount = C * C;
-            int totalSwitches = 2 * C + C * C;
-                
-            Endpoints = endpoints;
-            RegisterList(nameof(Routers), totalSwitches);
+            int H = endpoints.Count / 2;
+            var D = Math.Log(Convert.ToDouble(H), Convert.ToDouble(C));
+            var L = Math.Pow(C, D - 1);
 
-            for (int i = 0; i < Endpoints.Count; i++) {
-                
+            var totallSwitches = (2 * D - 1) * L;
+            Endpoints = endpoints;
+            RegisterList(nameof(Routers), Convert.ToInt32(totallSwitches));
+            var ts = 0;
+
+            //Leaves
+            var max = Endpoints.Count / C;
+            for (int i = 0; i < max; i++) {
+                var re = Routers[ts++];
+
+                foreach (var ne in Endpoints.Values.Skip(i).Take(C))
+                {
+                    var l = new NetworkChannel(ctx, ne, re);
+                    Links.Add(l);
+                    RegisterPattern(l);
+                }
             }
+
+            //Trunk
+            int range = C;
+            int step = 1;
+            var current = ts;
+            int layer = Convert.ToInt32(L*2);
+
+            while (current + layer < Routers.Count) {
+                for (int i = current; i < current + layer; i++) {
+
+                    var re = Routers[i];
+                    var k = i - layer;
+                    var mul = (k / range) * range;
+                    var r = k % range;
+                    for (var j = k; j < range; j += step) {
+                        var ne = Routers[mul + j + r];
+                        var l = new NetworkChannel(ctx, ne, re);
+                        Links.Add(l);
+                        RegisterPattern(l);
+                    }
+
+                }
+
+                step *= range;
+                range *= range;
+                current = current + layer;
+            }
+
+            //Root
+            for (int i = current; i < current + layer/2; i++)
+            {
+
+                var re = Routers[i];
+                var k = i - layer;
+                var mul = (k / range) * range;
+                var r = k % range;
+                for (var j = k; j < range; j += step)
+                {
+                    var ne = Routers[mul + j + r];
+                    var l = new NetworkChannel(ctx, ne, re);
+                    Links.Add(l);
+                    RegisterPattern(l);
+                }
+
+            }
+
+
         }
     }
 }

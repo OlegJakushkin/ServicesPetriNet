@@ -16,6 +16,11 @@ namespace ServicesPetriNet.Core
         protected void RegisterNode(string name)
         {
             var p = Extensions.InitSingleNode(this, name);
+            RegisterNode(name, p);
+        }
+
+        protected void RegisterNode(string name, INode p)
+        {
             PatternNodes.Add(new KeyValuePair<string, INode>(name, p));
         }
 
@@ -28,19 +33,30 @@ namespace ServicesPetriNet.Core
         {
             var p = Extensions.InitListOfNodes(this, name, count);
             for (var i = 0; i < count; i++)
-                PatternNodes.Add(new KeyValuePair<string, INode>(name + "[" + i + "]", p[i]));
+                PatternNodes.Add(new KeyValuePair<string, INode>(name + "_" + i + "_", p[i]));
+        }
+
+        protected void RegisterList<T>(string name, List<T> p) where T : INode
+        {
+            for (var i = 0; i < p.Count; i++)
+                PatternNodes.Add(new KeyValuePair<string, INode>(name + "_" + i + "_", p[i]));
         }
 
         public virtual void RefreshHostDescriptor(IGroupDescriptor descriptor)
         {
             PatternNodes.Where(p => p.Value.GetType() == typeof(Place)).ToList().ForEach(
-                p => descriptor.Places.Add(
-                    p.Key + "_" + GetHashCode(),
-                    new FieldDescriptor<Place> {
-                        Value = p.Value as Place,
-                        Attributes = GetType().GetField(p.Key).GetCustomAttributes(true).Cast<Attribute>().ToList()
-                    }
-                )
+                pp =>
+                {
+                    var k = pp.Key + "_" + GetHashCode();
+                    var v = new FieldDescriptor<Place> {
+                        Value = pp.Value as Place,
+                        Attributes = new List<Attribute>()// GetType().GetField(pp.Key).GetCustomAttributes(true).Cast<Attribute>().ToList()
+                    };
+                    descriptor.Places.Add(
+                        k,
+                        v
+                    );
+                }
             );
 
 
