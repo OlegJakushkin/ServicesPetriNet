@@ -96,7 +96,7 @@ namespace ServicesPetriNet
             for (int i = 0; i < max; i++) {
                 var re = Routers[ts++];
 
-                foreach (var ne in Endpoints.Values.Skip(i).Take(C))
+                foreach (var ne in Endpoints.Values.Skip(C*i).Take(C))
                 {
                     var l = new NetworkChannel(ctx, ne, re);
                     Links.Add(l);
@@ -117,7 +117,7 @@ namespace ServicesPetriNet
                     var k = i - layer;
                     var mul = (k / range) * range;
                     var r = k % range;
-                    for (var j = k; j < range; j += step) {
+                    for (var j = 0; j < range; j += step) {
                         var ne = Routers[mul + j + r];
                         var l = new NetworkChannel(ctx, ne, re);
                         Links.Add(l);
@@ -138,10 +138,9 @@ namespace ServicesPetriNet
                 var re = Routers[i];
                 var k = i - layer;
                 var mul = (k / range) * range;
-                var r = k % range;
-                for (var j = k; j < range; j += step)
+                for (var j = current - layer + i % step; j < current; j += step)
                 {
-                    var ne = Routers[mul + j + r];
+                    var ne = Routers[j];
                     var l = new NetworkChannel(ctx, ne, re);
                     Links.Add(l);
                     RegisterPattern(l);

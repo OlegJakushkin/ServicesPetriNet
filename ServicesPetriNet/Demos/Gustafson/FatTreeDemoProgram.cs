@@ -15,7 +15,7 @@ namespace ServicesPetriNet
             public List<Place> RackNodes;
             public FatTree Tree;
 
-            public FatTreeCluster(int hosts = 8, int portsOnRouter=4)
+            public FatTreeCluster(int hosts = 54, int portsOnRouter=6)
             {
                 Extensions.InitListOfNodes(this, nameof(RackNodes), hosts);
                 var i = 0;
