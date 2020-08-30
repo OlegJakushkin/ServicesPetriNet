@@ -8,10 +8,12 @@ namespace ServicesPetriNet.Core
     public class Pattern
     {
         private readonly List<KeyValuePair<string, INode>> PatternNodes = new List<KeyValuePair<string, INode>>();
-        public readonly List<Pattern> PatternPatterns = new List<Pattern>();
+        private readonly List<Pattern> PatternPatterns = new List<Pattern>();
         public Pattern(Group hostCtx) { Host = hostCtx; }
         
         public Group Host { get; set; }
+
+
 
         protected void RegisterNode(string name)
         {
@@ -81,6 +83,15 @@ namespace ServicesPetriNet.Core
                     descriptor.Transitions.Add(key, val);
                 }
             );
+        }
+
+        public void ApplyToNestedPatterns(Action<Pattern> act)
+        {
+            PatternPatterns.ForEach(pp => act(pp));
+        }
+        public void ApplyToGeneratedNodes(Action<string, INode> act)
+        {
+            PatternNodes.ForEach(pp => act(pp.Key, pp.Value));
         }
     }
 }

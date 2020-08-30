@@ -34,8 +34,13 @@ namespace ServicesPetriNet.Core
 
         public void RegisterPattern(Pattern p)
         {
-            Patterns.Add(p);
-            p.PatternPatterns.ForEach(pp=> RegisterPattern(pp));
+            Action<Pattern> act = null;
+                act = pattern =>
+            {
+                Patterns.Add(pattern);
+                pattern.ApplyToNestedPatterns(act);
+            };
+            act(p);
         }
 
         //Returns Fraction - minimal frame time span

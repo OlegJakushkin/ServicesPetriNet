@@ -179,10 +179,6 @@ namespace ServicesPetriNet.Core
                 var t = transition.Value;
                 var mod = state.CurrentTime % t.TimeScale;
                 var time = mod == 0;
-                if(time && t.Check() && state.CurrentTime == 2 && "AmdahlLaw.DoneChecker" != t.DebugSource(TopGroup) ) {
-                    var w = t.DebugSource(TopGroup);
-                    var b = 222;
-                }
                 if (time) {
                     var avail = t.Check();
                     
@@ -231,7 +227,6 @@ namespace ServicesPetriNet.Core
             //Act
             foreach (var transition in readyToAct) {
                 var t = transition.Transition;
-                var ts = t.DebugSource(state.TopGroup);
                 var results = t.Act(transition.Marks);
                 var added = t.Distribute(results);
 

@@ -143,8 +143,15 @@ namespace ServicesPetriNet
                 .GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
                 .Where(fi => t.IsAssignableFrom(fi.FieldType)).ToList())
                 if (Fi.FieldType != typeof(Type)) {
-                    var it = (TChild) Fi.GetValue(instance);
-                    if (it == null) Fi.SetValue(instance, (TChild) Activator.CreateInstance(Fi.FieldType));
+                    var it = (TChild)Fi.GetValue(instance);
+                    if (it == null) {
+                        if (typeof(INode).IsAssignableFrom(Fi.FieldType)) {
+                            Fi.SetValue(instance, (TChild)CreateNode(instance, Fi.FieldType));
+                        }
+                        else {
+                            Fi.SetValue(instance, (TChild) Activator.CreateInstance(Fi.FieldType));
+                        }
+                    }
                 }
         }
 
@@ -315,26 +322,91 @@ namespace ServicesPetriNet
             return result;
         }
 
-        public static string DebugSource(this INode o, Group g)
+        public class NodeDetails : IEquatable<NodeDetails>
         {
-            var result = o.ToString();
-            Action<Group> a = null;
-            a = g =>
+            public string ID;
+            public string Name;
+            public bool IsPatternMember;
+            public Pattern PatternSource;
+            public INode Host;
+
+            public NodeDetails(INode o, Group g)
             {
-                var isT = g.Descriptor.Transitions.Any(pair => pair.Value.Value == o);
-                if (isT) {
-                    result = g.GetType().Name + "_" + g.Descriptor.Transitions.First(pair => pair.Value.Value == o).Key;
-                } else {
+                Host = o;
+
+                var result = o.ToString();
+                Action<Group> a = null;
+                a = g =>
+                {
+                    var isT = g.Descriptor.Transitions.Any(pair => pair.Value.Value == o);
                     var isP = g.Descriptor.Places.Any(pair => pair.Value.Value == o);
-                    if (isP)
-                        result = g.GetType().Name + "_" + g.Descriptor.Places.First(pair => pair.Value.Value == o).Key;
-                }
 
-                g.Descriptor.ApplyToAllSubGroups(descriptor => a(descriptor.Value));
-            };
-            a(g);
+                    if (isT) {
+                        var tn = g.Descriptor.Transitions.First(pair => pair.Value.Value == o);
+                        result = g.GetType().Name + "_" + tn.Key;
+                        Name = tn.Key;
+                    }
+                    else if (isP){
+                        var pn = g.Descriptor.Places.First(pair => pair.Value.Value == o);
+                            result = g.GetType().Name + "_" + pn.Key;
+                            Name = pn.Key;
 
-            return result;
+                    }
+
+                    if (isP || isT) {
+                        var isInP = false;
+                        Action<Pattern> act = null;
+                            act = pattern =>
+                        {
+                            if(isInP) 
+                                return;
+
+                            pattern.ApplyToGeneratedNodes(
+                                (s, node) =>
+                                {
+                                    if (node == o) {
+                                        isInP = true;
+                                        IsPatternMember = true;
+                                        PatternSource = pattern;
+                                    }
+                                }
+                            );
+                            pattern.ApplyToNestedPatterns(pp=> act(pp));
+                        };
+
+                        g.Descriptor.Patterns.ForEach(pattern => act(pattern));
+
+                    } else {
+                        g.Descriptor.ApplyToAllSubGroups(descriptor => a(descriptor.Value));
+                    }
+
+                };
+                a(g);
+                ID =  result;
+            }
+            public override string ToString() { return ID; }
+            public override int GetHashCode() {
+                return (ID != null ? ID.GetHashCode() : 0);
+            }
+
+            public bool Equals(NodeDetails other)
+            {
+                if (ReferenceEquals(null, other)) return false;
+                if (ReferenceEquals(this, other)) return true;
+                return ID == other.ID;
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((NodeDetails) obj);
+            }
+        }
+        public static NodeDetails DebugSource(this INode o, Group g)
+        {
+            return new NodeDetails(o, g);
         }
 
         public struct LinkKey : IEqualityComparer<LinkKey>
