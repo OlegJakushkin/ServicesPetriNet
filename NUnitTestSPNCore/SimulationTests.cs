@@ -11,18 +11,9 @@ namespace NUnitTestSPNCore
         [SetUp]
         public void init()
         {
-            Controller = new SimulationController<SimpleEmptyCheck>(false, path, SimulationStrategy.Plane);
+            Controller = new SimulationController<SimpleEmptyCheck>(false, path);
             for (var i = 0; i < 5; i++) Controller.SimulationStep();
             Controller.Save();
-        }
-
-        [Test]
-        public void TestRuntimeStateAtSave()
-        {
-            var simulation = Controller.state.TopGroup;
-            var d = simulation.Descriptor.DebugGetMarksTree();
-            Assert.AreEqual(2, simulation.C.GetMarks().Count);
-            Assert.AreEqual(0, simulation.B.GetMarks().Count);
         }
 
         private readonly string path = "C:/Users/Натали/Downloads/defsg/sim.json";
@@ -57,6 +48,15 @@ namespace NUnitTestSPNCore
             Assert.AreEqual(2, restoredSimulation.C.GetMarks().Count);
             Assert.AreEqual(0, restoredSimulation.B.GetMarks().Count);
             Assert.AreNotEqual(restoredSimulation.C, Controller.state.TopGroup.C);
+        }
+
+        [Test]
+        public void TestRuntimeStateAtSave()
+        {
+            var simulation = Controller.state.TopGroup;
+            var d = simulation.Descriptor.DebugGetMarksTree();
+            Assert.AreEqual(2, simulation.C.GetMarks().Count);
+            Assert.AreEqual(0, simulation.B.GetMarks().Count);
         }
     }
 }

@@ -3,40 +3,42 @@ using System.Collections.Generic;
 using System.Linq;
 using Accord.Math.Random;
 using Fractions;
-using Newtonsoft.Json;
 using ServicesPetriNet.Core.Attributes;
 
 namespace ServicesPetriNet.Core
 {
     public class SimulationController<TGroup> : SimulationControllerBase<TGroup> where TGroup : Group, new()
     {
-        public SimulationController(bool load = false, string path = "./model.json", SimulationStrategy strategy = SimulationStrategy.Plane)
-            : base(load, path, () => new TGroup(), SimulationStrategy.Plane) { }
+        public SimulationController(bool load = false, string path = "./model.json",
+            SimulationStrategy strategy = SimulationStrategy.Plane)
+            : base(load, path, () => new TGroup()) { }
     }
 
     public enum SimulationStrategy
     {
         None,
         Plane, // 70% of run time is spent on serialization
-        Diffs, // 50% of run time is spent on diff creation
+        Diffs // 50% of run time is spent on diff creation
     }
+
     public class SimulationControllerBase<TGroup> where TGroup : Group
     {
-        private readonly Dictionary<Place, List<Action<List<MarkType>>>> _eventListners =
-            new Dictionary<Place, List<Action<List<MarkType>>>>();
         private readonly Dictionary<Transition, List<Action>> _activationListners =
             new Dictionary<Transition, List<Action>>();
+
         private readonly Dictionary<Transition, List<Action>> _completeListners =
             new Dictionary<Transition, List<Action>>();
 
-        private IFrameController<State> Frames;
+        private readonly Dictionary<Place, List<Action<List<MarkType>>>> _eventListners =
+            new Dictionary<Place, List<Action<List<MarkType>>>>();
+
+        private readonly IFrameController<State> Frames;
 
         public State state = new State();
-        public TGroup TopGroup => state.TopGroup;
-        public int Frame => (state.CurrentTime/state.TimeStep).ToInt32();
 
 
-        public SimulationControllerBase(bool load = false, string path = "./model.json", Func<TGroup> generator = null, SimulationStrategy strategy =SimulationStrategy.Plane)
+        public SimulationControllerBase(bool load = false, string path = "./model.json", Func<TGroup> generator = null,
+            SimulationStrategy strategy = SimulationStrategy.Plane)
         {
             if (load) {
                 switch (strategy) {
@@ -115,6 +117,9 @@ namespace ServicesPetriNet.Core
             }
         }
 
+        public TGroup TopGroup => state.TopGroup;
+        public int Frame => (state.CurrentTime / state.TimeStep).ToInt32();
+
         public List<FieldDescriptor<Transition>> Transitions { get; set; }
 
         public void OnPlaceUpdate(Place key, Action<List<MarkType>> action)
@@ -133,12 +138,9 @@ namespace ServicesPetriNet.Core
         public void OnBeforeTransitionFired(Transition key, Action action)
         {
             List<Action> listners = null;
-            if (_activationListners.TryGetValue(key, out listners))
-            {
+            if (_activationListners.TryGetValue(key, out listners)) {
                 listners.Add(action);
-            }
-            else
-            {
+            } else {
                 listners = new List<Action> {
                     action
                 };
@@ -149,12 +151,9 @@ namespace ServicesPetriNet.Core
         public void OnAfterTransitionFired(Transition key, Action action)
         {
             List<Action> listners = null;
-            if (_activationListners.TryGetValue(key, out listners))
-            {
+            if (_activationListners.TryGetValue(key, out listners)) {
                 listners.Add(action);
-            }
-            else
-            {
+            } else {
                 listners = new List<Action> {
                     action
                 };
@@ -164,12 +163,13 @@ namespace ServicesPetriNet.Core
 
         public void Save() { Frames.Save(); }
 
-        public State Load(int frame =-1)
+        public State Load(int frame = -1)
         {
             var s = Frames.GetState(frame);
             s.CleanUpMarks();
             return s;
         }
+
         public void SimulationStep()
         {
             state.CurrentTime += state.TimeStep;
@@ -181,7 +181,7 @@ namespace ServicesPetriNet.Core
                 var time = mod == 0;
                 if (time) {
                     var avail = t.Check();
-                    
+
                     if (avail) {
                         if (transition.Attributes.Any(a => a is ProbabiletyAttribute) &&
                             transition.Attributes.First(a => a is ProbabiletyAttribute) is ProbabiletyAttribute pa) {
@@ -198,12 +198,13 @@ namespace ServicesPetriNet.Core
 
                         readyToAct.Add(
                             new TransitionStage {
-                                Transition = t,
+                                Transition = t
                             }
                         );
                     }
                 }
             }
+
             //Debug section start
             foreach (var kvp in readyToAct)
                 if (_activationListners.TryGetValue(kvp.Transition, out var listeners))
@@ -212,17 +213,11 @@ namespace ServicesPetriNet.Core
             //Debug section end
 
             //Grab marks
-            List<TransitionStage> ToRemove = new List<TransitionStage>();
-            foreach (var kvp in readyToAct) {
-                if (kvp.Transition.Check()) {
-                    kvp.Marks = kvp.Transition.Gather();
-                } else {
-                    ToRemove.Add(kvp);
-                }
-            }
-            foreach (var transitionStage in ToRemove) {
-                readyToAct.Remove(transitionStage);
-            }
+            var ToRemove = new List<TransitionStage>();
+            foreach (var kvp in readyToAct)
+                if (kvp.Transition.Check()) kvp.Marks = kvp.Transition.Gather();
+                else ToRemove.Add(kvp);
+            foreach (var transitionStage in ToRemove) readyToAct.Remove(transitionStage);
 
             //Act
             foreach (var transition in readyToAct) {
@@ -241,7 +236,6 @@ namespace ServicesPetriNet.Core
                         foreach (var listener in listeners)
                             listener(kvp.Value);
                 //Debug section end
-
             }
 
             MarksController.Marks.RemoveAll(mark => mark.Host == null || mark.Host is Transition);
@@ -256,7 +250,7 @@ namespace ServicesPetriNet.Core
             public Fraction TimeStep;
             public TGroup TopGroup;
 
-            
+
             public void RefreshMarks()
             {
                 var ms = TopGroup.Descriptor.DebugGetMarksTree();
@@ -273,10 +267,9 @@ namespace ServicesPetriNet.Core
                     l.ForEach(
                         type =>
                         {
-                            if (!Marks.Contains(type)) {
-                                type.Host = null;
-                            }
-                        });
+                            if (!Marks.Contains(type)) type.Host = null;
+                        }
+                    );
                 }
             }
         }

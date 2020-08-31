@@ -9,9 +9,7 @@ using ServicesPetriNet.Core;
 
 namespace ServicesPetriNet
 {
-
-
-     public static class Extensions
+    public static class Extensions
     {
         public static IEnumerable<T> Traverse<T>(this IEnumerable<T> items,
             Func<T, IEnumerable<T>> childSelector)
@@ -143,14 +141,11 @@ namespace ServicesPetriNet
                 .GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
                 .Where(fi => t.IsAssignableFrom(fi.FieldType)).ToList())
                 if (Fi.FieldType != typeof(Type)) {
-                    var it = (TChild)Fi.GetValue(instance);
+                    var it = (TChild) Fi.GetValue(instance);
                     if (it == null) {
-                        if (typeof(INode).IsAssignableFrom(Fi.FieldType)) {
-                            Fi.SetValue(instance, (TChild)CreateNode(instance, Fi.FieldType));
-                        }
-                        else {
-                            Fi.SetValue(instance, (TChild) Activator.CreateInstance(Fi.FieldType));
-                        }
+                        if (typeof(INode).IsAssignableFrom(Fi.FieldType))
+                            Fi.SetValue(instance, (TChild) CreateNode(instance, Fi.FieldType));
+                        else Fi.SetValue(instance, (TChild) Activator.CreateInstance(Fi.FieldType));
                     }
                 }
         }
@@ -189,18 +184,10 @@ namespace ServicesPetriNet
         {
             var o = (INode) Activator.CreateInstance(tp);
             var ts = host.GetType();
-            if (typeof(Group).IsAssignableFrom(ts)) {
-                o.From = (Group) host;
-            } else if (typeof(IGroupDescriptor).IsAssignableFrom(ts)) {
-                o.From = ((IGroupDescriptor) host).Host;
-            }
-            else if (typeof(Pattern).IsAssignableFrom(ts))
-            {
-                o.From = ((Pattern)host).Host;
-            }
-            else {
-                throw new Exception("Shall be called from Group, Pattern or Desctiptor!");
-            }
+            if (typeof(Group).IsAssignableFrom(ts)) o.From = (Group) host;
+            else if (typeof(IGroupDescriptor).IsAssignableFrom(ts)) o.From = ((IGroupDescriptor) host).Host;
+            else if (typeof(Pattern).IsAssignableFrom(ts)) o.From = ((Pattern) host).Host;
+            else throw new Exception("Shall be called from Group, Pattern or Desctiptor!");
 
             return o;
         }
@@ -233,9 +220,9 @@ namespace ServicesPetriNet
 
         #region Transition
 
-        public static bool Decompose(this Group At, IMarkType whom, List<IPart> into )
+        public static bool Decompose(this Group At, IMarkType whom, List<IPart> into)
         {
-            var result = whom.Decompose(@into, At);
+            var result = whom.Decompose(into, At);
             return result;
         }
 
@@ -324,11 +311,11 @@ namespace ServicesPetriNet
 
         public class NodeDetails : IEquatable<NodeDetails>
         {
-            public string ID;
-            public string Name;
-            public bool IsPatternMember;
-            public Pattern PatternSource;
             public INode Host;
+            public string ID;
+            public bool IsPatternMember;
+            public string Name;
+            public Pattern PatternSource;
 
             public NodeDetails(INode o, Group g)
             {
@@ -345,20 +332,18 @@ namespace ServicesPetriNet
                         var tn = g.Descriptor.Transitions.First(pair => pair.Value.Value == o);
                         result = g.GetType().Name + "_" + tn.Key;
                         Name = tn.Key;
-                    }
-                    else if (isP){
+                    } else if (isP) {
                         var pn = g.Descriptor.Places.First(pair => pair.Value.Value == o);
-                            result = g.GetType().Name + "_" + pn.Key;
-                            Name = pn.Key;
-
+                        result = g.GetType().Name + "_" + pn.Key;
+                        Name = pn.Key;
                     }
 
                     if (isP || isT) {
                         var isInP = false;
                         Action<Pattern> act = null;
-                            act = pattern =>
+                        act = pattern =>
                         {
-                            if(isInP) 
+                            if (isInP)
                                 return;
 
                             pattern.ApplyToGeneratedNodes(
@@ -371,22 +356,16 @@ namespace ServicesPetriNet
                                     }
                                 }
                             );
-                            pattern.ApplyToNestedPatterns(pp=> act(pp));
+                            pattern.ApplyToNestedPatterns(pp => act(pp));
                         };
 
                         g.Descriptor.Patterns.ForEach(pattern => act(pattern));
-
                     } else {
                         g.Descriptor.ApplyToAllSubGroups(descriptor => a(descriptor.Value));
                     }
-
                 };
                 a(g);
-                ID =  result;
-            }
-            public override string ToString() { return ID; }
-            public override int GetHashCode() {
-                return (ID != null ? ID.GetHashCode() : 0);
+                ID = result;
             }
 
             public bool Equals(NodeDetails other)
@@ -396,18 +375,20 @@ namespace ServicesPetriNet
                 return ID == other.ID;
             }
 
+            public override string ToString() { return ID; }
+
+            public override int GetHashCode() { return ID != null ? ID.GetHashCode() : 0; }
+
             public override bool Equals(object obj)
             {
                 if (ReferenceEquals(null, obj)) return false;
                 if (ReferenceEquals(this, obj)) return true;
-                if (obj.GetType() != this.GetType()) return false;
+                if (obj.GetType() != GetType()) return false;
                 return Equals((NodeDetails) obj);
             }
         }
-        public static NodeDetails DebugSource(this INode o, Group g)
-        {
-            return new NodeDetails(o, g);
-        }
+
+        public static NodeDetails DebugSource(this INode o, Group g) { return new NodeDetails(o, g); }
 
         public struct LinkKey : IEqualityComparer<LinkKey>
         {
@@ -475,7 +456,7 @@ namespace ServicesPetriNet
         public static Dictionary<Type, List<MarkType>> Act(this Transition t, Dictionary<LinkKey, List<MarkType>> dict)
         {
             var actor = Dynamic.InvokeConstructor(t.Action);
-            var action = (IAction)actor;
+            var action = (IAction) actor;
             action.Host = t;
 
             var method = t.Action.GetMethod(nameof(Action));

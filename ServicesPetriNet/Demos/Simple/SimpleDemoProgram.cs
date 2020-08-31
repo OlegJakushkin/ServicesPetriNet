@@ -9,6 +9,22 @@ namespace ServicesPetriNet
 {
     public class SimpleDemoProgram
     {
+        public static void Main()
+        {
+            var simulation = new SimulationController<Sample>();
+
+            var s = simulation.DebugGraphToDot();
+            Console.Write(s);
+            File.WriteAllText("./simple.dot", s);
+
+            simulation.SimulationStep();
+            var result = simulation.TopGroup.C.GetMarks().First() as Mark;
+            Assert.AreEqual(5 + 6, result.value);
+            Console.Write("Simulation completed!");
+
+            Console.ReadLine();
+        }
+
         public class Mark : MarkType
         {
             public int value;
@@ -40,22 +56,6 @@ namespace ServicesPetriNet
                 Marks = Extensions.At(A, MarkType.Create<Mark>(5))
                     .At(B, MarkType.Create<Mark>(6));
             }
-        }
-
-        public static void Main()
-        {
-            var simulation = new SimulationController<Sample>();
-
-            var s = simulation.DebugGraphToDot();
-            Console.Write(s);
-            File.WriteAllText("./simple.dot", s);
-
-            simulation.SimulationStep();
-            var result = simulation.TopGroup.C.GetMarks().First() as Mark;
-            Assert.AreEqual(5 + 6, result.value);
-            Console.Write("Simulation completed!");
-
-            Console.ReadLine();
         }
     }
 }

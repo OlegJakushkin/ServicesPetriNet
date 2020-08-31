@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using Fractions;
 using ServicesPetriNet.Core;
 using ServicesPetriNet.Core.Transitions;
@@ -14,9 +13,9 @@ namespace ServicesPetriNet
 
         public Place LinearTasks;
         public Transition LinearWorker;
+        public List<Transition> ParallelBalancedWorkers;
 
         public Place ParallelTasks;
-        public List<Transition> ParallelBalancedWorkers;
 
         public GustafsonLaw(float time, int processors,
             Fraction seialFraction)
@@ -25,7 +24,7 @@ namespace ServicesPetriNet
             var parallelTime = Fraction.FromDoubleRounded(time) - serialTime;
             var timeStep = Extensions.GreatestCommonDivisor(serialTime, parallelTime);
             var linearTasks = serialTime / timeStep;
-            var parallelTasks = processors * (parallelTime/ timeStep);
+            var parallelTasks = processors * (parallelTime / timeStep);
 
             Extensions.InitListOfNodes(this, nameof(ParallelBalancedWorkers), processors);
 
@@ -47,8 +46,7 @@ namespace ServicesPetriNet
             LinearWorker.TimeScale = timeStep;
 
             //Note that ParallelBalancedWorkers are empty when parallelTasks < processors
-            for (var i = 0; i < processors; i++)
-            {
+            for (var i = 0; i < processors; i++) {
                 var cw = ParallelBalancedWorkers[i];
 
                 //Await Linear tasks, run at one step of the time

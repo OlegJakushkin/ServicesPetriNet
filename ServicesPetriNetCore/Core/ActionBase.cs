@@ -7,9 +7,9 @@ namespace ServicesPetriNet
     {
         Transition Host { get; set; }
     }
+
     public class ActionBase : IAction
     {
-
         [JsonIgnore]
         public Transition Host { get; set; }
     }

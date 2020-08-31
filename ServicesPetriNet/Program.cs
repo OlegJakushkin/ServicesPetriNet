@@ -1,6 +1,4 @@
-﻿using Dynamitey.DynamicObjects;
-
-namespace ServicesPetriNet
+﻿namespace ServicesPetriNet
 {
     public class Program
     {

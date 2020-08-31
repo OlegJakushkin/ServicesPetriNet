@@ -4,7 +4,6 @@ using System.Linq;
 using Fractions;
 using ServicesPetriNet.Core;
 using ServicesPetriNet.Core.Transitions;
-using ServicesPetriNet.Examples;
 
 namespace ServicesPetriNet
 {
@@ -12,6 +11,7 @@ namespace ServicesPetriNet
     {
         public int Size, Number;
     }
+
     public class NetworkChannel : Pattern
     {
         private Place ChannelS, ChannelR;
@@ -52,10 +52,12 @@ namespace ServicesPetriNet
     {
         public Type From => typeof(T);
 
+        public Transition Host { get; set; }
+
         public virtual List<Package> Action(T input)
         {
-            var result = new List<Package>() {
-                new Package() {
+            var result = new List<Package> {
+                new Package {
                     Number = 0,
                     Size = 1
                 }
@@ -63,26 +65,23 @@ namespace ServicesPetriNet
             Host.From.Decompose(input, result.AsParts());
             return result;
         }
-
-        public Transition Host { get; set; }
     }
-    
+
 
     public class FatTree : Pattern
     {
-        private List<Transition> ToPackageTransitions;
+        public Dictionary<string, Place> Endpoints;
+        private readonly List<NetworkChannel> Links = new List<NetworkChannel>();
 
         private List<Place> Routers;
-        private List<NetworkChannel> Links = new List<NetworkChannel>();
-
-        public Dictionary<string, Place> Endpoints;
         public List<Type> ToPackageConverters;
+        private List<Transition> ToPackageTransitions;
 
-        public FatTree(Group ctx, Dictionary<string, Place> endpoints, Fraction convertersSpeed, int Kport = 6 , params Type[] toPackageConverters) : base(ctx)
+        public FatTree(Group ctx, Dictionary<string, Place> endpoints, Fraction convertersSpeed, int Kport = 6,
+            params Type[] toPackageConverters) : base(ctx)
         {
-            
-            int C = Kport / 2;
-            int H = endpoints.Count / 2;
+            var C = Kport / 2;
+            var H = endpoints.Count / 2;
             var D = Math.Log(Convert.ToDouble(H), Convert.ToDouble(C));
             var L = Math.Pow(C, D - 1);
 
@@ -93,11 +92,10 @@ namespace ServicesPetriNet
 
             //Leaves
             var max = Endpoints.Count / C;
-            for (int i = 0; i < max; i++) {
+            for (var i = 0; i < max; i++) {
                 var re = Routers[ts++];
 
-                foreach (var ne in Endpoints.Values.Skip(C*i).Take(C))
-                {
+                foreach (var ne in Endpoints.Values.Skip(C * i).Take(C)) {
                     var l = new NetworkChannel(ctx, ne, re);
                     Links.Add(l);
                     RegisterPattern(l);
@@ -105,17 +103,16 @@ namespace ServicesPetriNet
             }
 
             //Trunk
-            int range = C;
-            int step = 1;
+            var range = C;
+            var step = 1;
             var current = ts;
-            int layer = Convert.ToInt32(L*2);
+            var layer = Convert.ToInt32(L * 2);
 
             while (current + layer < Routers.Count) {
-                for (int i = current; i < current + layer; i++) {
-
+                for (var i = current; i < current + layer; i++) {
                     var re = Routers[i];
                     var k = i - layer;
-                    var mul = (k / range) * range;
+                    var mul = k / range * range;
                     var r = k % range;
                     for (var j = 0; j < range; j += step) {
                         var ne = Routers[mul + j + r];
@@ -123,7 +120,6 @@ namespace ServicesPetriNet
                         Links.Add(l);
                         RegisterPattern(l);
                     }
-
                 }
 
                 step *= range;
@@ -132,23 +128,17 @@ namespace ServicesPetriNet
             }
 
             //Root
-            for (int i = current; i < current + layer/2; i++)
-            {
-
+            for (var i = current; i < current + layer / 2; i++) {
                 var re = Routers[i];
                 var k = i - layer;
-                var mul = (k / range) * range;
-                for (var j = current - layer + i % step; j < current; j += step)
-                {
+                var mul = k / range * range;
+                for (var j = current - layer + i % step; j < current; j += step) {
                     var ne = Routers[j];
                     var l = new NetworkChannel(ctx, ne, re);
                     Links.Add(l);
                     RegisterPattern(l);
                 }
-
             }
-
-
         }
     }
 }

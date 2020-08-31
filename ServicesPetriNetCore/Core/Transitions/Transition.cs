@@ -17,6 +17,7 @@ namespace ServicesPetriNet.Core
         public Type Action;
         public List<Link> Links = new List<Link>();
         public Fraction TimeScale = 1;
+
         [JsonIgnore]
         public Group From { get; set; }
     }

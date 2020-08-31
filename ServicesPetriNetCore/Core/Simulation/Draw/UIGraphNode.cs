@@ -4,8 +4,8 @@ namespace ServicesPetriNetCore.Core.Simulation.Draw
 {
     public class UIGraphNode : IEquatable<UIGraphNode>
     {
-        public object src;
         public bool remove;
+        public object src;
 
         public bool Equals(UIGraphNode other)
         {
@@ -18,13 +18,10 @@ namespace ServicesPetriNetCore.Core.Simulation.Draw
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((UIGraphNode)obj);
+            if (obj.GetType() != GetType()) return false;
+            return Equals((UIGraphNode) obj);
         }
 
-        public override int GetHashCode()
-        {
-            return (src != null ? src.GetHashCode() : 0);
-        }
+        public override int GetHashCode() { return src != null ? src.GetHashCode() : 0; }
     }
 }

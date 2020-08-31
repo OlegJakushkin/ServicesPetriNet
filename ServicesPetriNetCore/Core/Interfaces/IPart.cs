@@ -6,6 +6,5 @@
         int Number { get; set; }
         int From { get; set; }
         public IMarkType Parent { get; set; }
-
     }
 }

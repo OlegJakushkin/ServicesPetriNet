@@ -14,6 +14,7 @@ namespace ServicesPetriNet.Core
     public class Group
     {
         public Place DecomposedMarks;
+
         public Group()
         {
             InitAllTypeInstances<Place>(this);
@@ -27,15 +28,17 @@ namespace ServicesPetriNet.Core
         public IGroupDescriptor Descriptor { get; set; }
 
         public Fraction TimeScale { get; set; } = 1;
+
         [JsonIgnore]
         public List<MarkType> Marks { get => Descriptor.Marks; set => Descriptor.Refresh(); }
+
         [JsonIgnore]
         public List<Pattern> Patterns { get => Descriptor.Patterns; set => Descriptor.Refresh(); }
 
         public void RegisterPattern(Pattern p)
         {
             Action<Pattern> act = null;
-                act = pattern =>
+            act = pattern =>
             {
                 Patterns.Add(pattern);
                 pattern.ApplyToNestedPatterns(act);

@@ -1,6 +1,4 @@
 ﻿using System;
-using System.IO;
-using Newtonsoft.Json;
 
 namespace ServicesPetriNet.Core
 {
@@ -10,16 +8,11 @@ namespace ServicesPetriNet.Core
 
         public T GetState(int frame = -1)
         {
-            if (frame == -1) {
-                return TopGroup;
-            } 
+            if (frame == -1) return TopGroup;
             throw new Exception("Not implemented in this FrameController, please use Diff or Plain ones");
         }
 
-        public void SaveState(T TopGroup)
-        {
-            this.TopGroup = TopGroup;
-        }
+        public void SaveState(T TopGroup) { this.TopGroup = TopGroup; }
 
         public void IterateOverFrames(Action<T> act, int tillFrame = -1)
         {

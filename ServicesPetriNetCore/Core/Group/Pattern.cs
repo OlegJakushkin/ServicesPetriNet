@@ -10,9 +10,8 @@ namespace ServicesPetriNet.Core
         private readonly List<KeyValuePair<string, INode>> PatternNodes = new List<KeyValuePair<string, INode>>();
         private readonly List<Pattern> PatternPatterns = new List<Pattern>();
         public Pattern(Group hostCtx) { Host = hostCtx; }
-        
-        public Group Host { get; set; }
 
+        public Group Host { get; set; }
 
 
         protected void RegisterNode(string name)
@@ -26,10 +25,7 @@ namespace ServicesPetriNet.Core
             PatternNodes.Add(new KeyValuePair<string, INode>(name, p));
         }
 
-        protected void RegisterPattern(Pattern p)
-        {
-            PatternPatterns.Add(p);
-        }
+        protected void RegisterPattern(Pattern p) { PatternPatterns.Add(p); }
 
         protected void RegisterList(string name, int count)
         {
@@ -52,7 +48,8 @@ namespace ServicesPetriNet.Core
                     var k = pp.Key + "_" + GetHashCode();
                     var v = new FieldDescriptor<Place> {
                         Value = pp.Value as Place,
-                        Attributes = new List<Attribute>()// GetType().GetField(pp.Key).GetCustomAttributes(true).Cast<Attribute>().ToList()
+                        Attributes =
+                            new List<Attribute>() // GetType().GetField(pp.Key).GetCustomAttributes(true).Cast<Attribute>().ToList()
                     };
                     descriptor.Places.Add(
                         k,
@@ -85,10 +82,8 @@ namespace ServicesPetriNet.Core
             );
         }
 
-        public void ApplyToNestedPatterns(Action<Pattern> act)
-        {
-            PatternPatterns.ForEach(pp => act(pp));
-        }
+        public void ApplyToNestedPatterns(Action<Pattern> act) { PatternPatterns.ForEach(pp => act(pp)); }
+
         public void ApplyToGeneratedNodes(Action<string, INode> act)
         {
             PatternNodes.ForEach(pp => act(pp.Key, pp.Value));

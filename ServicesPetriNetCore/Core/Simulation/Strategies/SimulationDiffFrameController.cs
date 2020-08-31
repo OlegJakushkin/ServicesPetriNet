@@ -10,8 +10,7 @@ namespace ServicesPetriNet.Core
         private readonly string _path;
         public Frames f;
 
-        public JsonSerializerSettings JsonSettings = new JsonSerializerSettings
-        {
+        public JsonSerializerSettings JsonSettings = new JsonSerializerSettings {
             TypeNameAssemblyFormatHandling = TypeNameAssemblyFormatHandling.Full,
             TypeNameHandling = TypeNameHandling.Objects,
             ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
@@ -21,14 +20,11 @@ namespace ServicesPetriNet.Core
         public SimulationDiffFrameController(string path, bool preserve = true)
         {
             _path = path;
-            if (preserve)
-            {
+            if (preserve) {
                 var state = File.ReadAllText(path);
                 f = JsonConvert.DeserializeObject<Frames>(state);
                 if (f == null) throw new Exception("Unreadable file!");
-            }
-            else
-            {
+            } else {
                 f = new Frames();
                 Save();
             }
@@ -41,8 +37,7 @@ namespace ServicesPetriNet.Core
 
             var latest = frame == -1;
             if (!latest)
-                for (var i = 1; i < frame; i++)
-                {
+                for (var i = 1; i < frame; i++) {
                     var dstDelta = dmp.DiffFromDelta(txt, f.diffs[f.frames]);
                     txt = dmp.DiffText2(dstDelta);
                 }
@@ -55,12 +50,9 @@ namespace ServicesPetriNet.Core
         {
             var ng = JsonConvert.SerializeObject(TopGroup, Formatting.None, JsonSettings);
 
-            if (f.frames == 0)
-            {
+            if (f.frames == 0) {
                 f.diffs.Add(ng);
-            }
-            else
-            {
+            } else {
                 var dmp = DiffMatchPatchModule.Default;
                 var txt = f.LastState;
                 var diffs = dmp.DiffMain(txt, ng);
@@ -79,8 +71,7 @@ namespace ServicesPetriNet.Core
             act(JsonConvert.DeserializeObject<T>(txt, JsonSettings));
 
             var latest = tillFrame == -1 ? f.frames : tillFrame;
-            for (var i = 1; i < latest; i++)
-            {
+            for (var i = 1; i < latest; i++) {
                 var dstDelta = dmp.DiffFromDelta(txt, f.diffs[f.frames]);
                 txt = dmp.DiffText2(dstDelta);
                 act(JsonConvert.DeserializeObject<T>(txt, JsonSettings));
@@ -92,7 +83,5 @@ namespace ServicesPetriNet.Core
             var s = JsonConvert.SerializeObject(f, Formatting.None, JsonSettings);
             File.WriteAllText(_path, s);
         }
-
-
     }
 }

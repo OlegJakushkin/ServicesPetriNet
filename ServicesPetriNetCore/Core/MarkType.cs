@@ -12,9 +12,10 @@ namespace ServicesPetriNet
         {
             public static List<MarkType> Marks = new List<MarkType>();
 
-            public static List<MarkType> GetPlaceMarks(Place p) { return Marks.Where(t => t.Host != null && t.Host.Equals(p)).ToList(); }
-
-
+            public static List<MarkType> GetPlaceMarks(Place p)
+            {
+                return Marks.Where(t => t.Host != null && t.Host.Equals(p)).ToList();
+            }
         }
 
         public class MarkType : IMarkType
@@ -26,8 +27,10 @@ namespace ServicesPetriNet
                 MarksController.Marks.Add(this);
             }
 
-            public INode Host { get; set; }
+            //As IPart
+            public bool HasParent => Parent != null;
 
+            public INode Host { get; set; }
 
 
             public bool Decompose(List<IPart> into, Group At)
@@ -72,6 +75,14 @@ namespace ServicesPetriNet
                 return (false, null);
             }
 
+            //As Parts Holder
+            public bool Decomposed { get; set; }
+            public List<IPart> Parts { get; }
+            public IMarkType Parent { get; set; }
+            public bool IsPart => HasParent;
+            public int Number { get; set; }
+            public int From { get; set; }
+
 
             public static MarkType Create<T>(params object[] fields)
             {
@@ -95,17 +106,6 @@ namespace ServicesPetriNet
                 var result = (MarkType) o;
                 return result;
             }
-
-            //As Parts Holder
-            public bool Decomposed { get; set; }
-            public List<IPart> Parts { get; }
-
-            //As IPart
-            public bool HasParent => Parent != null;
-            public IMarkType Parent { get; set; }
-            public bool IsPart => HasParent;
-            public int Number { get; set; }
-            public int From { get; set; }
         }
     }
 }

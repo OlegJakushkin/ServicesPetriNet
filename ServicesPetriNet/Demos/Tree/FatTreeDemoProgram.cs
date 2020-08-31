@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using ScottPlot;
 using ServicesPetriNet.Core;
 using ServicesPetriNetCore.Core.Simulation.Draw;
 
@@ -14,9 +13,7 @@ namespace ServicesPetriNet
 
             simulation.SimulationStep();
 
-            var filterOut = new Type[] {
-                typeof(NetworkChannel)
-            };
+            var filterOut = new[] {typeof(NetworkChannel)};
             var s = simulation.DebugGraphToDot(filterOut);
             Console.Write(simulation);
             File.WriteAllText("./fattree.dot", s);

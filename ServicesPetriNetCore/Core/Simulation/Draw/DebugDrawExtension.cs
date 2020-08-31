@@ -8,11 +8,10 @@ namespace ServicesPetriNetCore.Core.Simulation.Draw
 {
     public static class DebugDrawExtension
     {
-        public static string DebugGraphToDot<T>(this SimulationControllerBase<T> simulation, Type[] filterOut = null) where T : Group
+        public static string DebugGraphToDot<T>(this SimulationControllerBase<T> simulation, Type[] filterOut = null)
+            where T : Group
         {
-            if (filterOut == null) {
-                filterOut = new Type[] { };
-            }
+            if (filterOut == null) filterOut = new Type[] { };
             var s = "digraph G {\nrankdir=LR;\т";
             var gu = new UIGraph();
             Action<Group> toDot = null;
@@ -25,36 +24,22 @@ namespace ServicesPetriNetCore.Core.Simulation.Draw
                 {
                     var forbidden = filterOut.Any(type => d.Host.From.GetType().IsAssignableFrom(type));
                     if (d.IsPatternMember)
-                    {
                         forbidden = filterOut.Any(type => d.PatternSource.GetType().IsAssignableFrom(type));
-                    }
 
-                    var n = new UIGraphNode()
-                    {
+                    var n = new UIGraphNode {
                         src = d
                     };
-                    if (!forbidden)
-                    {
-                        n.remove = false;
-                    }
-                    else
-                    {
-                        n.remove = true;
-                    }
+                    if (!forbidden) n.remove = false;
+                    else n.remove = true;
 
                     return n;
                 };
 
-                foreach (var fieldDescriptor in @group.Descriptor.Places.Values)
-                {
+                foreach (var fieldDescriptor in group.Descriptor.Places.Values) {
                     var d = fieldDescriptor.Value.DebugSource(group);
                     var n = getNode(d);
-                    if (!n.remove)
-                    {
-                        s += d + " [xlabel = \"" + d.Name + "\"];\n";
-                    }
+                    if (!n.remove) s += d + " [xlabel = \"" + d.Name + "\"];\n";
                     gu.Nodes.Add(n, new List<UIGraphNode>());
-
                 }
 
                 s += "}\n";
@@ -63,21 +48,16 @@ namespace ServicesPetriNetCore.Core.Simulation.Draw
                      "node [shape=rect,height=.4,width=.1,label=\"\",fillcolor=black, style=filled];\n";
 
 
-                foreach (var fieldDescriptor in @group.Descriptor.Transitions.Values)
-                {
+                foreach (var fieldDescriptor in group.Descriptor.Transitions.Values) {
                     var d = fieldDescriptor.Value.DebugSource(group);
                     var n = getNode(d);
-                    if (!n.remove)
-                    {
-                        s += d + " [xlabel = \"" + d.Name + "\"];\n";
-                    }
+                    if (!n.remove) s += d + " [xlabel = \"" + d.Name + "\"];\n";
                     gu.Nodes.Add(n, new List<UIGraphNode>());
                 }
 
                 s += "}\n";
 
-                foreach (var fieldDescriptor in @group.Descriptor.Transitions.Values)
-                {
+                foreach (var fieldDescriptor in group.Descriptor.Transitions.Values)
                     fieldDescriptor.Value.Links.ForEach(
                         link =>
                         {
@@ -88,7 +68,6 @@ namespace ServicesPetriNetCore.Core.Simulation.Draw
                             gu.Nodes[ff].Add(tto);
                         }
                     );
-                }
                 group.Descriptor.ApplyToAllSubGroups(descriptor => toDot(descriptor.Value));
             };
             toDot(simulation.TopGroup);
@@ -101,37 +80,25 @@ namespace ServicesPetriNetCore.Core.Simulation.Draw
                 gu.Nodes[current].ForEach(
                     node =>
                     {
-                        if (node.remove)
-                        {
+                        if (node.remove) {
                             act(source, node);
-                        }
-                        else
-                        {
-                            if (!ngu.Nodes.ContainsKey(source))
-                            {
-                                ngu.Nodes.Add(source, new List<UIGraphNode>());
-                            }
+                        } else {
+                            if (!ngu.Nodes.ContainsKey(source)) ngu.Nodes.Add(source, new List<UIGraphNode>());
                             ngu.Nodes[source].Add(node);
                         }
                     }
                 );
             };
-            foreach (var kn in gu.Nodes.Keys.Where((node, i) => !node.remove))
-            {
-
-                act(kn, kn);
-            }
+            foreach (var kn in gu.Nodes.Keys.Where((node, i) => !node.remove)) act(kn, kn);
 
             foreach (var kvp in ngu.Nodes)
-            {
                 kvp.Value.ForEach(
                     node =>
                     {
                         s += kvp.Key.src + " -> " +
                              node.src + ";\n";
-                    });
-
-            }
+                    }
+                );
 
             s += "}";
             return s;

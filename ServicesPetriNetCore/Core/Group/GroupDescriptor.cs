@@ -9,10 +9,6 @@ namespace ServicesPetriNet.Core
 {
     public class GroupDescriptor : IGroupDescriptor
     {
-
-        [JsonIgnore]
-        public Group Host { get; set; }
-
         private GroupDescriptor(Group instance)
         {
             Marks = new List<MarkType>();
@@ -21,6 +17,9 @@ namespace ServicesPetriNet.Core
             Host = instance;
             Refresh();
         }
+
+        [JsonIgnore]
+        public Group Host { get; set; }
 
         [JsonIgnore]
         public Dictionary<string, FieldDescriptor<Place>> Places { get; set; }

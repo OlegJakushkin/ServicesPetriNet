@@ -18,9 +18,9 @@ namespace ServicesPetriNet
         public Transition LinearWorker;
 
         public Place ParallelBalancedTasks;
+        public List<Transition> ParallelBalancedWorkers;
         public Place SquizeParallelTasks;
         public List<Transition> SquizeParallelWorkers;
-        public List<Transition> ParallelBalancedWorkers;
 
         public AmdahlLaw(int tasks, int processors,
             Fraction parallelPart)
@@ -40,7 +40,8 @@ namespace ServicesPetriNet
 
             //Marks are representing tasks
             for (var i = 0; i < linearTasks; i++) Extensions.At(LinearTasks, MarkType.Create<Mark>());
-            for (var i = 0; i < parallelBalancedTasks; i++) Extensions.At(ParallelBalancedTasks, MarkType.Create<Mark>());
+            for (var i = 0; i < parallelBalancedTasks; i++)
+                Extensions.At(ParallelBalancedTasks, MarkType.Create<Mark>());
             for (var i = 0; i < squizeTasks; i++) Extensions.At(SquizeParallelTasks, MarkType.Create<Mark>());
 
             //After all is done we want to check that no tasks are left behind
@@ -70,10 +71,9 @@ namespace ServicesPetriNet
             // Fire squize tasks when balanced and linear tasks are done
             var squizeTimeScale = new Fraction(squizeTasks, processors)
                                   + LinearWorker.TimeScale * linearTasks
-                                  + ParallelBalancedWorkers.First().TimeScale * (parallelBalancedTasks/processors);
+                                  + ParallelBalancedWorkers.First().TimeScale * (parallelBalancedTasks / processors);
 
-            for (var i = 0; i < processors; i++)
-            {
+            for (var i = 0; i < processors; i++) {
                 var cw = SquizeParallelWorkers[i];
 
                 //Await Linear and Equally Balanced tasks, run at reduced time step
@@ -83,8 +83,9 @@ namespace ServicesPetriNet
                     .In<Mark>(SquizeParallelTasks)
                     .Out<Mark>(DoneTasks);
 
-                    cw.TimeScale = squizeTimeScale;
+                cw.TimeScale = squizeTimeScale;
             }
+
             Descriptor.Refresh();
         }
     }
