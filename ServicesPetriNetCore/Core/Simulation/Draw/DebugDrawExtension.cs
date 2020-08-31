@@ -13,7 +13,7 @@ namespace ServicesPetriNetCore.Core.Simulation.Draw
             if (filterOut == null) {
                 filterOut = new Type[] { };
             }
-            var s = "digraph G {\n";
+            var s = "digraph G {\nrankdir=LR;\т";
             var gu = new UIGraph();
             Action<Group> toDot = null;
             toDot = group =>
@@ -81,8 +81,8 @@ namespace ServicesPetriNetCore.Core.Simulation.Draw
                     fieldDescriptor.Value.Links.ForEach(
                         link =>
                         {
-                            var from = link.To.DebugSource(group);
-                            var to = link.From.DebugSource(group);
+                            var from = link.From.DebugSource(group);
+                            var to = link.To.DebugSource(group);
                             var ff = getNode(from);
                             var tto = getNode(to);
                             gu.Nodes[ff].Add(tto);

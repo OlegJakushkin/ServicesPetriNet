@@ -83,7 +83,7 @@ Let's discuss what this does from a code standpoint:
 
  So we get a graph like [this](https://bit.ly/2QAbLxQ): 
  
-<img src="https://user-images.githubusercontent.com/2915361/91675876-99469800-eb46-11ea-8616-b77cf4eb8e79.png " width="300" >
+<img src="https://user-images.githubusercontent.com/2915361/91677982-ffceb480-eb4c-11ea-98b8-ec658e88763a.png" width="300" >
 
 *Note*:
   - There are no marks shown! This is a feature you can implement=)
@@ -92,8 +92,12 @@ Let's discuss what this does from a code standpoint:
 Samples:
  - [UnitTests](https://github.com/OlegJakushkin/ServicesPetriNet/tree/master/NUnitTestSPNCore/Tests) are a good base to start reading different ways of how one can declare Group/Action/Pattern, How simulation class can be used to save and restored from file 
  - `GustafsonLawDemoProgram` that shows how one can implement  Gustafson's Law via Petri Nets and generate an image like this:
+ 
 ![AmdahlSpeedUp](https://user-images.githubusercontent.com/2915361/91676471-92b92000-eb48-11ea-8330-319a268abcc2.png)
+
  - `AmdahlLawDemoProgram` that shows how one can implement Amdahl's Law and generate an image like this:
+ 
   ![image](https://user-images.githubusercontent.com/2915361/91676555-e592d780-eb48-11ea-8828-ff257ad68bdf.png)
+  
  - FatTreeDemoProgram (in progress) that shows how one can implement complex MarkTypes routing over a network of places.
  
