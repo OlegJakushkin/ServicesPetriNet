@@ -12,7 +12,7 @@ namespace ServicesPetriNetCore.Core.Simulation.Draw
             where T : Group
         {
             if (filterOut == null) filterOut = new Type[] { };
-            var s = "digraph G {\nrankdir=LR;\т";
+            var s = "digraph G {\nrankdir=LR;\n";
             var gu = new UIGraph();
             Action<Group> toDot = null;
             toDot = group =>
