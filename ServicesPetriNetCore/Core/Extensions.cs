@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using Dynamitey;
@@ -229,6 +230,13 @@ namespace ServicesPetriNet
         public static Transition Action<T>(this Transition t) where T : IAction
         {
             t.Action = typeof(T);
+
+            return t;
+        }
+        public static Transition Action(this Transition t, Type T)
+        {
+            Debug.Assert(typeof(IAction).IsAssignableFrom(T));
+            t.Action = T;
 
             return t;
         }
@@ -643,6 +651,16 @@ namespace ServicesPetriNet
             CheckNulls(t, from);
 
             t.Links.Add(new Link<T>(from, t, byName, howMany, count));
+            return t;
+        }
+
+        public static Transition In(this Transition t, Type T, Place from, Link.Count howMany = Link.Count.One,
+            string byName = "",
+            int count = -1)
+        {
+            CheckNulls(t, from);
+
+            t.Links.Add(new Link(from, t, T, byName, howMany, count));
             return t;
         }
 

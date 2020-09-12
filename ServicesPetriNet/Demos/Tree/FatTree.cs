@@ -50,7 +50,7 @@ namespace ServicesPetriNet
     public class Converter<T> : ActionBase
         where T : MarkType, new()
     {
-        public Type From => typeof(T);
+        public static Type From => typeof(T);
 
         public Transition Host { get; set; }
 
@@ -72,14 +72,31 @@ namespace ServicesPetriNet
     {
         public Dictionary<string, Place> Endpoints;
         private readonly List<NetworkChannel> Links = new List<NetworkChannel>();
-
+        private readonly List<Transition> Converters;
         private List<Place> Routers;
         public List<Type> ToPackageConverters;
         private List<Transition> ToPackageTransitions;
 
         public FatTree(Group ctx, Dictionary<string, Place> endpoints, Fraction convertersSpeed, int Kport = 6,
-            params Type[] toPackageConverters) : base(ctx)
+            Dictionary<Type, Type> converters = null) : base(ctx)
         {
+            if (converters != null)
+            {
+                RegisterList(nameof(Converters), endpoints.Count * converters.Count);
+
+                var w = 0;
+                foreach (var endpoint in endpoints)
+                {
+                    foreach (var converter in converters)
+                    {
+                        Converters[w].Action(converter.Key)
+                            .In(converter.Value, endpoint.Value)
+                            .Out<Package>(endpoint.Value);
+                        w++;
+                    }
+                }
+            }
+
             var C = Kport / 2;
             var H = endpoints.Count / 2;
             var D = Math.Log(Convert.ToDouble(H), Convert.ToDouble(C));
