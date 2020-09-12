@@ -72,11 +72,18 @@ namespace ServicesPetriNet.Core
                         BindingFlags.Public | BindingFlags.NonPublic |
                         BindingFlags.Instance
                     );
-                    var attrs = f.GetCustomAttributes(true).Cast<Attribute>().ToList();
-                    var val = new FieldDescriptor<Transition> {
-                        Value = (Transition) p.Value,
-                        Attributes = attrs
+                    var val = new FieldDescriptor<Transition>()
+                    {
+                        Value = (Transition) p.Value
                     };
+
+                    
+                    if (f != null)
+                    {
+                        var attrs = f.GetCustomAttributes(true).Cast<Attribute>().ToList();
+                        val.Attributes = attrs;
+                    }
+
                     descriptor.Transitions.Add(key, val);
                 }
             );

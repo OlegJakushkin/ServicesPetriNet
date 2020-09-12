@@ -97,8 +97,9 @@ namespace ServicesPetriNet
                 )) {
                     var isMark = fieldInfo.FieldType == typeof(MarkType);
                     var isInt = fieldInfo.FieldType == typeof(int);
+                    var isStr = fieldInfo.FieldType == typeof(string);
                     ;
-                    if (!(isMark || isInt)) throw new Exception("Only nested mark types and int types are allowed");
+                    if (!(isMark || isInt || isStr)) throw new Exception("Only nested mark types and int types are allowed");
                     if (argId < fields.Length) Dynamic.InvokeSet(o, fieldInfo.Name, fields[argId++]);
                     else break;
                 }

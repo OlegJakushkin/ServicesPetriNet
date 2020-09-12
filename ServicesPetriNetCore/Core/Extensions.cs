@@ -556,7 +556,7 @@ namespace ServicesPetriNet
                 if (outs.TryGetValue(type, out var value) &&
                     value != null) marks = value;
 
-                if (variable.GetType().IsList()) marks.AddRange((List<MarkType>) variable);
+                if (variable.GetType().IsList()) marks.AddRange((variable as IEnumerable).Cast<MarkType>().ToList());
                 else marks.Add((MarkType) variable);
 
                 outs[type] = marks;

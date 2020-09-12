@@ -10,6 +10,7 @@ namespace ServicesPetriNet
     public class Package : MarkType
     {
         public int Size, Number;
+        public string To;
     }
 
     public class NetworkChannel : Pattern
@@ -52,8 +53,6 @@ namespace ServicesPetriNet
     {
         public static Type From => typeof(T);
 
-        public Transition Host { get; set; }
-
         public virtual List<Package> Action(T input)
         {
             var result = new List<Package> {
@@ -72,7 +71,7 @@ namespace ServicesPetriNet
     {
         public Dictionary<string, Place> Endpoints;
         private readonly List<NetworkChannel> Links = new List<NetworkChannel>();
-        private readonly List<Transition> Converters;
+        private  List<Transition> Converters;
         private List<Place> Routers;
         public List<Type> ToPackageConverters;
         private List<Transition> ToPackageTransitions;
@@ -91,7 +90,7 @@ namespace ServicesPetriNet
                     {
                         Converters[w].Action(converter.Key)
                             .In(converter.Value, endpoint.Value)
-                            .Out<Package>(endpoint.Value);
+                            .Out<Package>(endpoint.Value, Link.Count.All);
                         w++;
                     }
                 }
