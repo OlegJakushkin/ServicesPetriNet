@@ -7,7 +7,7 @@
             //GustafsonLawDemoProgram.Main();
             //AmdahlLawDemoProgram.Main();
             FatTreeDemoProgram.Main();
-            SimpleDemoProgram.Main();
+            //SimpleDemoProgram.Main();
         }
     }
 }
