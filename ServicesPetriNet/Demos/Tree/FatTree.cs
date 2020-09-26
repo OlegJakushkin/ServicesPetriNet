@@ -3,68 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using Fractions;
 using ServicesPetriNet.Core;
-using ServicesPetriNet.Core.Transitions;
 
 namespace ServicesPetriNet
 {
-    public class Package : MarkType
-    {
-        public int Size, Number;
-        public string To;
-    }
-
-    public class NetworkChannel : Pattern
-    {
-        private Place ChannelS, ChannelR;
-        public Place NetworkFrom, NetworkTo;
-
-        private Transition SendT, SendR, ReceiveT, ReceiveR;
-
-        public NetworkChannel(Group ctx, Place networkFrom, Place networkTo) : base(ctx)
-        {
-            NetworkFrom = networkFrom;
-            NetworkTo = networkTo;
-
-            RegisterNode(nameof(SendT));
-            RegisterNode(nameof(SendR));
-            RegisterNode(nameof(ReceiveT));
-            RegisterNode(nameof(ReceiveR));
-            RegisterNode(nameof(ChannelS));
-            RegisterNode(nameof(ChannelR));
-
-            SendT.Action<OneToOne<Package>>()
-                .In<Package>(NetworkFrom)
-                .Out<Package>(ChannelS);
-            SendR.Action<OneToOne<Package>>()
-                .In<Package>(ChannelS)
-                .Out<Package>(NetworkTo);
-
-            ReceiveT.Action<OneToOne<Package>>()
-                .In<Package>(NetworkTo)
-                .Out<Package>(ChannelR);
-            ReceiveR.Action<OneToOne<Package>>()
-                .In<Package>(ChannelR)
-                .Out<Package>(NetworkFrom);
-        }
-    }
-
-    public class Converter<T> : ActionBase
-        where T : MarkType, new()
-    {
-        public static Type From => typeof(T);
-
-        public virtual List<Package> Action(T input)
-        {
-            var result = new List<Package> {
-                new Package {
-                    Number = 0,
-                    Size = 1
-                }
-            };
-            Host.From.Decompose(input, result.AsParts());
-            return result;
-        }
-    }
 
 
     public class FatTree : Pattern
