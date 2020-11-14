@@ -16,7 +16,7 @@ namespace NUnitTestSPNCore
             Controller.Save();
         }
 
-        private readonly string path = "C:/Users/Натали/Downloads/defsg/sim.json";
+        private readonly string path = "./sim.json";
 
         private SimulationController<SimpleEmptyCheck> Controller;
 

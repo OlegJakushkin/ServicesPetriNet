@@ -7,7 +7,7 @@ using ServicesPetriNet.Core;
 namespace ServicesPetriNet
 {
 
-
+    /*
     public class FatTree : Pattern
     {
         public Dictionary<string, Place> Endpoints;
@@ -98,4 +98,5 @@ namespace ServicesPetriNet
             }
         }
     }
+    */
 }

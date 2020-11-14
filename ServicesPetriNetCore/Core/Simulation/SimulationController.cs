@@ -222,8 +222,7 @@ namespace ServicesPetriNet.Core
             //Act
             foreach (var transition in readyToAct) {
                 var t = transition.Transition;
-                var results = t.Act(transition.Marks);
-                var added = t.Distribute(results);
+                var added = t.Act(transition.Marks);
 
                 //Debug section start
                 foreach (var kvp in readyToAct)
@@ -276,7 +275,7 @@ namespace ServicesPetriNet.Core
 
         private class TransitionStage
         {
-            public Dictionary<Extensions.LinkKey, List<MarkType>> Marks;
+            public Dictionary<LinkKey, List<MarkType>> Marks;
             public Transition Transition;
         }
     }
