@@ -283,6 +283,11 @@ namespace ServicesPetriNet
             var actor = Dynamic.InvokeConstructor(t.Action);
             var action = (IAction) actor;
             action.Host = t;
+            if (action.GetType().GetMethod("ActionCaller").DeclaringType != typeof(ActionBase) && t.Action.GetMethod(nameof(Action)) == null)
+            {
+                return true;
+            }
+
 
             var method = t.Action.GetMethod(nameof(Action));
 
