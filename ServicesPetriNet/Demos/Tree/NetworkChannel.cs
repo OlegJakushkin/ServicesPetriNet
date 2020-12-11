@@ -4,28 +4,42 @@ using ServicesPetriNet.Core.Transitions;
 
 namespace ServicesPetriNet
 {
+
     public class NetworkChannel : Pattern
     {
-        private Place Channel;
+        private Place ChannelS, ChannelR;
         public Place NetworkFrom, NetworkTo;
 
-        private Transition Send, Receive;
+        private Transition SendT, SendR, ReceiveT, ReceiveR;
 
-        public NetworkChannel(Group ctx, Place networkTo) : base(ctx)
+        public NetworkChannel(Group ctx, Place networkFrom, Place networkTo) : base(ctx)
         {
+            NetworkFrom = networkFrom;
             NetworkTo = networkTo;
 
-            RegisterNode(nameof(NetworkFrom));
-            RegisterNode(nameof(Channel));
-            RegisterNode(nameof(Send));
-            RegisterNode(nameof(Receive));
+            RegisterNode(nameof(SendT));
+            RegisterNode(nameof(SendR));
+            RegisterNode(nameof(ReceiveT));
+            RegisterNode(nameof(ReceiveR));
+            RegisterNode(nameof(ChannelS));
+            RegisterNode(nameof(ChannelR));
 
-            Send.Action<OneToOne<Package>>()
+            SendT.Action<OneToOne<Package>>()
                 .In<Package>(NetworkFrom)
-                .Out<Package>(Channel);
-            Receive.Action<OneToOne<Package>>()
-                .In<Package>(Channel)
+                .Out<Package>(ChannelS);
+            SendR.Action<OneToOne<Package>>()
+                .In<Package>(ChannelS)
                 .Out<Package>(NetworkTo);
+
+            ReceiveT.Action<OneToOne<Package>>()
+                .In<Package>(NetworkTo)
+                .Out<Package>(ChannelR);
+            ReceiveR.Action<OneToOne<Package>>()
+                .In<Package>(ChannelR)
+                .Out<Package>(NetworkFrom);
         }
     }
+
+
+
 }

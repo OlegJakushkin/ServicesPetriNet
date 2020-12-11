@@ -13,10 +13,10 @@ namespace ServicesPetriNet
 
             simulation.SimulationStep();
 
-           // var filterOut = new Type[] {typeof(FatTree), typeof(NetworkChannel) };
-           // var s = simulation.DebugGraphToDot(filterOut);
+            var filterOut = new Type[] { typeof(NetworkChannel) };
+            var s = simulation.DebugGraphToDot(filterOut);
             Console.Write(simulation);
-          // File.WriteAllText("./fattree.dot", s);
+            File.WriteAllText("./fattree.dot", s);
             Console.ReadLine();
         }
     }

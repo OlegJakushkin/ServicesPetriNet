@@ -9,7 +9,7 @@ namespace ServicesPetriNet
     public class FatTreeCluster : Group
     {
         public List<Place> RackNodes;
-        //public FatTree Tree;
+        public FatTree Tree;
 
         public class Mark : MarkType
         {
@@ -26,7 +26,7 @@ namespace ServicesPetriNet
             }
         }
 
-        public FatTreeCluster(int hosts = 54, int portsOnRouter = 6)
+        public FatTreeCluster(int hosts = 16, int portsOnRouter = 4)
         {
             Extensions.InitListOfNodes(this, nameof(RackNodes), hosts);
             
@@ -39,8 +39,8 @@ namespace ServicesPetriNet
             var Converters = new Dictionary<Type, Type>();
             Converters.Add(typeof(Convert), typeof(Mark));
 
-            //Tree = new FatTree(this, lan, Fraction.One, portsOnRouter, Converters);
-            //RegisterPattern(Tree);
+            Tree = new FatTree(this, lan, Fraction.One, portsOnRouter, Converters);
+            RegisterPattern(Tree);
         }
     }
 }
