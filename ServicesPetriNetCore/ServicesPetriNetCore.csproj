@@ -12,7 +12,7 @@
     <PackageReference Include="Fractions" Version="4.0.1" />
     <PackageReference Include="google-diff-match-patch" Version="1.1.22" />
     <PackageReference Include="JetBrains.Annotations" Version="2020.1.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
 
 </Project>
